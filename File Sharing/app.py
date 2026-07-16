@@ -17,7 +17,8 @@ from utils.crypto import (
 )
 
 app = Flask(__name__)
-UPLOAD_FOLDER = "uploads"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.secret_key = "shieldshare_secure_secret_key_12345"
 
@@ -25,7 +26,8 @@ app.secret_key = "shieldshare_secure_secret_key_12345"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def get_db_connection():
-    conn = sqlite3.connect("database.db")
+    db_path = os.path.join(BASE_DIR, "database.db")
+    conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     # Enable foreign keys
     conn.execute("PRAGMA foreign_keys = ON;")
