@@ -1,0 +1,27 @@
+# Environments
+**/venv/
+**/.venv/
+**/ENV/
+**/env/
+
+# Python caching
+**/__pycache__/
+**/*.py[cod]
+
+# IDEs
+**/.idea/
+**/.vscode/
+
+# Local Database & User uploads/keys
+**/database.db
+**/uploads/
+**/encrypted/
+**/keys/
+
+# Local Git installation files inside File Sharing
+**/File Sharing/Git/
+**/File Sharing/unins000.*
+**/File Sharing/ReleaseNotes.html
+**/File Sharing/LICENSE.txt
+**/File Sharing/git-bash.exe
+**/File Sharing/git-cmd.exe
