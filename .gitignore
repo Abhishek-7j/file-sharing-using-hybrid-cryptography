@@ -25,3 +25,6 @@
 **/File Sharing/LICENSE.txt
 **/File Sharing/git-bash.exe
 **/File Sharing/git-cmd.exe
+
+# Server-Side Session Storage Cache
+**/flask_session/
