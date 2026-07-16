@@ -188,6 +188,7 @@
             <div class="form-group">
                 <label for="username">Username</label>
                 <input type="text" id="username" name="username" placeholder="Enter username" required autocomplete="username">
+                <span id="username-status" style="display: block; font-size: 0.8rem; margin-top: 0.35rem; font-weight: 500;"></span>
             </div>
 
             <div class="form-group">
@@ -207,5 +208,50 @@
             Already have a vault? <a href="/login">Unlock Vault</a>
         </div>
     </div>
+
+    <script>
+        const usernameInput = document.getElementById('username');
+        const statusSpan = document.getElementById('username-status');
+        const submitBtn = document.querySelector('.btn-submit');
+        let timeout = null;
+
+        usernameInput.addEventListener('input', () => {
+            clearTimeout(timeout);
+            const username = usernameInput.value.trim();
+
+            if (!username) {
+                statusSpan.innerText = '';
+                return;
+            }
+
+            // Show checking status
+            statusSpan.innerText = 'Checking availability...';
+            statusSpan.style.color = '#9CA3AF';
+
+            timeout = setTimeout(() => {
+                fetch(`/check-username?username=${encodeURIComponent(username)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.exists) {
+                            statusSpan.innerText = 'Username already exists';
+                            statusSpan.style.color = '#EF4444'; // Red
+                            submitBtn.disabled = true;
+                            submitBtn.style.opacity = '0.5';
+                            submitBtn.style.cursor = 'not-allowed';
+                        } else {
+                            statusSpan.innerText = 'Username is available';
+                            statusSpan.style.color = '#10B981'; // Green
+                            submitBtn.disabled = false;
+                            submitBtn.style.opacity = '1';
+                            submitBtn.style.cursor = 'pointer';
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error checking username:', err);
+                        statusSpan.innerText = '';
+                    });
+            }, 300); // 300ms debounce
+        });
+    </script>
 </body>
 </html>

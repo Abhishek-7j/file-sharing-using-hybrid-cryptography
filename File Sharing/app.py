@@ -39,6 +39,16 @@ def home():
         return redirect("/dashboard")
     return redirect("/login")
 
+@app.route("/check-username")
+def check_username():
+    username = request.args.get("username", "").strip()
+    if not username:
+        return {"exists": False}
+    conn = get_db_connection()
+    user = conn.execute("SELECT id FROM users WHERE username = ?", (username,)).fetchone()
+    conn.close()
+    return {"exists": user is not None}
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if "username" in session:

@@ -101,6 +101,14 @@ res_bob_download = client.get(f"/download/{file_record['id']}")
 assert res_bob_download.data == file_content
 print("OK - Bob downloaded and decrypted the shared file successfully!")
 
+# Test 8: Username checking API
+print("\n--- Test 8: Username Checking API ---")
+res_check_exist = client.get("/check-username?username=alice")
+assert b'"exists":true' in res_check_exist.data
+res_check_new = client.get("/check-username?username=newuser")
+assert b'"exists":false' in res_check_new.data
+print("OK - Username checking API verified successfully!")
+
 print("\n==============================================")
 print("ALL SYSTEM INTEGRATION VERIFICATIONS SUCCESSFUL!")
 print("==============================================")
