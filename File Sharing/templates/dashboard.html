@@ -36,7 +36,6 @@
             overflow-x: hidden;
         }
 
-        /* Nav Header */
         header {
             display: flex;
             justify-content: space-between;
@@ -87,7 +86,6 @@
             color: #EF4444;
         }
 
-        /* Main Layout */
         .container {
             max-width: 1200px;
             width: 100%;
@@ -103,8 +101,8 @@
             padding: 1rem 1.5rem;
             border-radius: 12px;
             font-size: 0.95rem;
-            animation: slideIn 0.3s ease-out;
             margin-bottom: 1rem;
+            display: none;
         }
 
         .alert-success {
@@ -119,12 +117,6 @@
             color: #FCA5A5;
         }
 
-        @keyframes slideIn {
-            from { transform: translateY(-10px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        /* Card panels */
         .panel {
             background: var(--panel-bg);
             border: 1px solid var(--border-color);
@@ -132,6 +124,36 @@
             padding: 2rem;
             backdrop-filter: blur(16px);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .overlay-loader {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 15, 25, 0.85);
+            z-index: 100;
+            border-radius: 20px;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top: 4px solid var(--secondary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .panel-title {
@@ -146,7 +168,6 @@
             padding-bottom: 0.75rem;
         }
 
-        /* Upload Drag & Drop Area */
         .upload-section {
             display: flex;
             flex-direction: column;
@@ -214,7 +235,6 @@
             box-shadow: 0 6px 18px rgba(79, 70, 229, 0.5);
         }
 
-        /* Files Table styling */
         .table-container {
             overflow-x: auto;
         }
@@ -278,7 +298,6 @@
             border: 1px solid rgba(124, 58, 237, 0.3);
         }
 
-        /* Form shares style */
         .share-form {
             display: inline-flex;
             align-items: center;
@@ -342,6 +361,16 @@
             font-style: italic;
         }
     </style>
+    <script src="/static/js/crypto-helper.js"></script>
+    <script>
+        // Redirect to logout immediately if no private key is loaded in memory
+        if (!window.sessionStorage.getItem('private_key_pem')) {
+            window.location.href = '/logout';
+        }
+        
+        // Expose owner public key globally for upload
+        const OWNER_PUBLIC_KEY_PEM = `{{ owner_public_key }}`;
+    </script>
 </head>
 <body>
 
@@ -355,24 +384,20 @@
 
     <div class="container">
         
-        <!-- Notifications -->
-        {% if message %}
-        <div class="alert alert-success">
-            ✓ {{ message }}
-        </div>
-        {% endif %}
-        
-        {% if error %}
-        <div class="alert alert-error">
-            ✗ {{ error }}
-        </div>
-        {% endif %}
+        <!-- Client-side Notifications -->
+        <div class="alert alert-success" id="alert-success"></div>
+        <div class="alert alert-error" id="alert-error"></div>
 
         <!-- Upload Panel -->
         <div class="panel">
+            <div class="overlay-loader" id="upload-loader">
+                <div class="spinner"></div>
+                <div id="upload-loader-text">Encrypting file...</div>
+            </div>
+
             <div class="panel-title">Upload & Encrypt File</div>
             
-            <form action="/upload" method="POST" enctype="multipart/form-data">
+            <form id="upload-form">
                 <div class="upload-section" onclick="document.getElementById('file-input').click()">
                     <div class="upload-icon">📤</div>
                     <div class="upload-text">
@@ -392,6 +417,11 @@
 
         <!-- My Files Panel -->
         <div class="panel">
+            <div class="overlay-loader" id="own-loader">
+                <div class="spinner"></div>
+                <div id="own-loader-text">Working...</div>
+            </div>
+
             <div class="panel-title">
                 My Vault Files
                 <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal;">Symmetrically Encrypted</span>
@@ -425,14 +455,13 @@
                                     <span class="badge badge-aes">AES-GCM-256</span>
                                 </td>
                                 <td>
-                                    <form class="share-form" action="/share" method="POST">
-                                        <input type="hidden" name="file_id" value="{{ file.id }}">
-                                        <input type="text" class="share-input" name="share_with" placeholder="Username" required>
+                                    <form class="share-form" onsubmit="shareFile(event, {{ file.id }})">
+                                        <input type="text" class="share-input" placeholder="Username" required>
                                         <button type="submit" class="btn-action btn-share">Share</button>
                                     </form>
                                 </td>
                                 <td>
-                                    <a href="/download/{{ file.id }}" class="btn-action btn-download">📥 Decrypt & Download</a>
+                                    <button onclick="downloadAndDecrypt({{ file.id }}, '{{ file.filename }}')" class="btn-action btn-download">📥 Decrypt & Download</button>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -448,6 +477,11 @@
 
         <!-- Shared Files Panel -->
         <div class="panel">
+            <div class="overlay-loader" id="shared-loader">
+                <div class="spinner"></div>
+                <div id="shared-loader-text">Working...</div>
+            </div>
+
             <div class="panel-title">
                 Shared With Me
                 <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal;">RSA Key Exchanged</span>
@@ -480,7 +514,7 @@
                                     <span class="badge badge-rsa">RSA-2048</span>
                                 </td>
                                 <td>
-                                    <a href="/download/{{ file.id }}" class="btn-action btn-download">📥 Decrypt & Download</a>
+                                    <button onclick="downloadAndDecrypt({{ file.id }}, '{{ file.filename }}')" class="btn-action btn-download">📥 Decrypt & Download</button>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -497,6 +531,28 @@
     </div>
 
     <script>
+        const successBox = document.getElementById('alert-success');
+        const errorBox = document.getElementById('alert-error');
+
+        function showSuccess(msg) {
+            errorBox.style.display = 'none';
+            successBox.innerText = '✓ ' + msg;
+            successBox.style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showError(msg) {
+            successBox.style.display = 'none';
+            errorBox.innerText = '✗ ' + msg;
+            errorBox.style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Show query parameters if any
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('message')) showSuccess(urlParams.get('message'));
+        if (urlParams.get('error')) showError(urlParams.get('error'));
+
         function fileSelected(input) {
             const fileInfo = document.getElementById('file-info');
             const fileName = document.getElementById('file-name');
@@ -505,6 +561,231 @@
                 fileInfo.style.display = 'block';
             } else {
                 fileInfo.style.display = 'none';
+            }
+        }
+
+        // 1. Asynchronous E2EE File Upload handler
+        const uploadForm = document.getElementById('upload-form');
+        const uploadLoader = document.getElementById('upload-loader');
+        const uploadLoaderText = document.getElementById('upload-loader-text');
+
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            uploadLoader.style.display = 'flex';
+            uploadLoaderText.innerText = 'Reading file...';
+
+            const fileInput = document.getElementById('file-input');
+            if (fileInput.files.length === 0) {
+                showError('No file selected.');
+                uploadLoader.style.display = 'none';
+                return;
+            }
+
+            const file = fileInput.files[0];
+            
+            try {
+                const reader = new FileReader();
+                const fileLoadedPromise = new Promise((resolve) => {
+                    reader.onload = () => resolve(reader.result);
+                });
+                reader.readAsArrayBuffer(file);
+                const fileBuffer = await fileLoadedPromise;
+
+                uploadLoaderText.innerText = 'Encrypting file with AES-GCM-256...';
+                // Encrypt file content
+                const { encryptedFileBuffer, rawAesKey } = await encryptFileSymmetric(fileBuffer);
+
+                uploadLoaderText.innerText = 'Encrypting symmetric key with RSA...';
+                // Import owner's public key
+                const rsaPublicKey = await importPublicKeyPEM(OWNER_PUBLIC_KEY_PEM);
+                // Encrypt symmetric AES key
+                const encryptedAesKey = await encryptAesKeyAsymmetric(rawAesKey, rsaPublicKey);
+
+                // Build formData payload
+                const formData = new FormData();
+                formData.append('file', new Blob([encryptedFileBuffer]), file.name);
+                formData.append('encrypted_aes_key', encryptedAesKey);
+
+                uploadLoaderText.innerText = 'Uploading payload...';
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || 'Upload failed.');
+                }
+
+                window.location.href = '/dashboard?message=File+uploaded+and+encrypted+successfully';
+
+            } catch (err) {
+                console.error(err);
+                showError('Upload failed: ' + err.message);
+                uploadLoader.style.display = 'none';
+            }
+        });
+
+        // 2. Download and Client-Side Decrypt Handler
+        async function downloadAndDecrypt(fileId, filename) {
+            const ownLoader = document.getElementById('own-loader');
+            const sharedLoader = document.getElementById('shared-loader');
+            
+            ownLoader.style.display = 'flex';
+            sharedLoader.style.display = 'flex';
+            document.getElementById('own-loader-text').innerText = 'Downloading key...';
+            document.getElementById('shared-loader-text').innerText = 'Downloading key...';
+
+            try {
+                // 1. Download encrypted AES key
+                const keyResponse = await fetch(`/download-key/${fileId}`);
+                if (!keyResponse.ok) {
+                    const keyErr = await keyResponse.json();
+                    throw new Error(keyErr.message || 'Key download failed.');
+                }
+                const keyData = await keyResponse.json();
+
+                document.getElementById('own-loader-text').innerText = 'Downloading file payload...';
+                document.getElementById('shared-loader-text').innerText = 'Downloading file payload...';
+
+                // 2. Download encrypted file blob
+                const fileResponse = await fetch(`/download-file/${fileId}`);
+                if (!fileResponse.ok) {
+                    throw new Error('File download failed.');
+                }
+                const encryptedBlob = await fileResponse.blob();
+                const encryptedBuffer = await encryptedBlob.arrayBuffer();
+
+                document.getElementById('own-loader-text').innerText = 'Decrypting...';
+                document.getElementById('shared-loader-text').innerText = 'Decrypting...';
+
+                // 3. Import user's private key
+                const privateKeyPEM = window.sessionStorage.getItem('private_key_pem');
+                // Convert PEM to PKCS8
+                const lines = privateKeyPEM.split('\n');
+                let b64 = '';
+                for (let i = 0; i < lines.length; i++) {
+                    if (lines[i].trim() && !lines[i].includes('BEGIN PRIVATE KEY') && !lines[i].includes('END PRIVATE KEY')) {
+                        b64 += lines[i].trim();
+                    }
+                }
+                const privateKeyPKCS8 = base64ToArrayBuffer(b64);
+                const privateKey = await window.crypto.subtle.importKey(
+                    "pkcs8",
+                    privateKeyPKCS8,
+                    { name: "RSA-OAEP", hash: "SHA-256" },
+                    false,
+                    ["decrypt"]
+                );
+
+                // 4. Decrypt symmetric key
+                const rawAesKey = await decryptAesKeyAsymmetric(keyData.encrypted_aes_key, privateKey);
+
+                // 5. Decrypt file content
+                const decryptedBuffer = await decryptFileSymmetric(encryptedBuffer, rawAesKey);
+
+                // 6. Trigger Browser download save
+                const decryptedBlob = new Blob([decryptedBuffer]);
+                const url = window.URL.createObjectURL(decryptedBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+
+                ownLoader.style.display = 'none';
+                sharedLoader.style.display = 'none';
+                showSuccess('File decrypted and downloaded successfully!');
+
+            } catch (err) {
+                console.error(err);
+                ownLoader.style.display = 'none';
+                sharedLoader.style.display = 'none';
+                showError('Decryption failed: ' + err.message);
+            }
+        }
+
+        // 3. Client-Side E2EE Share Handler
+        async function shareFile(e, fileId) {
+            e.preventDefault();
+            const form = e.target;
+            const recipientUsername = form.querySelector('.share-input').value.trim();
+            
+            const ownLoader = document.getElementById('own-loader');
+            ownLoader.style.display = 'flex';
+            document.getElementById('own-loader-text').innerText = 'Retrieving public key...';
+
+            try {
+                // 1. Retrieve recipient's public key
+                const pubKeyResponse = await fetch(`/get-public-key?username=${encodeURIComponent(recipientUsername)}`);
+                if (!pubKeyResponse.ok) {
+                    const pubKeyErr = await pubKeyResponse.json();
+                    throw new Error(pubKeyErr.message || 'User not found.');
+                }
+                const recipientData = await pubKeyResponse.json();
+
+                document.getElementById('own-loader-text').innerText = 'Downloading symmetric key...';
+
+                // 2. Download owner's encrypted AES key
+                const keyResponse = await fetch(`/download-key/${fileId}`);
+                if (!keyResponse.ok) {
+                    throw new Error('Failed to retrieve file key.');
+                }
+                const keyData = await keyResponse.json();
+
+                document.getElementById('own-loader-text').innerText = 'Exchanging keys...';
+
+                // 3. Decrypt key with owner's private key
+                const privateKeyPEM = window.sessionStorage.getItem('private_key_pem');
+                const lines = privateKeyPEM.split('\n');
+                let b64 = '';
+                for (let i = 0; i < lines.length; i++) {
+                    if (lines[i].trim() && !lines[i].includes('BEGIN PRIVATE KEY') && !lines[i].includes('END PRIVATE KEY')) {
+                        b64 += lines[i].trim();
+                    }
+                }
+                const privateKeyPKCS8 = base64ToArrayBuffer(b64);
+                const privateKey = await window.crypto.subtle.importKey(
+                    "pkcs8",
+                    privateKeyPKCS8,
+                    { name: "RSA-OAEP", hash: "SHA-256" },
+                    false,
+                    ["decrypt"]
+                );
+
+                const rawAesKey = await decryptAesKeyAsymmetric(keyData.encrypted_aes_key, privateKey);
+
+                // 4. Encrypt key with recipient's public key
+                const recipientPublicKey = await importPublicKeyPEM(recipientData.public_key);
+                const encryptedAesKeyRecipient = await encryptAesKeyAsymmetric(rawAesKey, recipientPublicKey);
+
+                document.getElementById('own-loader-text').innerText = 'Writing share grant...';
+
+                // 5. Submit share payload to server
+                const shareResponse = await fetch('/share', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        file_id: fileId,
+                        share_with: recipientUsername,
+                        encrypted_aes_key: encryptedAesKeyRecipient
+                    })
+                });
+
+                const shareResult = await shareResponse.json();
+                if (!shareResponse.ok || shareResult.status !== 'success') {
+                    throw new Error(shareResult.message || 'Sharing failed.');
+                }
+
+                ownLoader.style.display = 'none';
+                form.querySelector('.share-input').value = '';
+                showSuccess(`File successfully shared with ${recipientUsername}`);
+
+            } catch (err) {
+                console.error(err);
+                ownLoader.style.display = 'none';
+                showError('Sharing failed: ' + err.message);
             }
         }
     </script>

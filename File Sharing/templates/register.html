@@ -172,19 +172,70 @@
             color: #A5B4FC;
             text-decoration: underline;
         }
+
+        .overlay-loader {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 15, 25, 0.8);
+            z-index: 100;
+            border-radius: 24px;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top: 4px solid var(--secondary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
+    <script src="/static/js/crypto-helper.js"></script>
 </head>
 <body>
     <div class="shape shape-1"></div>
     <div class="shape shape-2"></div>
 
+    <!-- Recovery Key Modal -->
+    <div id="recovery-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+        <div style="background: #111827; border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 2rem; max-width: 450px; width: 90%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: #F3F4F6;">⚠️ Save Your Recovery Key</h2>
+            <p style="color: #9CA3AF; font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.5;">If you lose your password, this is the ONLY way to recover your vault files. Keep this safe; it cannot be recovered if lost.</p>
+            <div id="recovery-key-display" style="background: rgba(0,0,0,0.3); border: 1px dashed #7C3AED; color: #A78BFA; font-family: monospace; font-size: 1.25rem; font-weight: 700; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; letter-spacing: 2px; user-select: all;">XXXX-XXXX-XXXX-XXXX</div>
+            <button type="button" id="copy-btn" style="padding: 0.75rem 1.5rem; background: #7C3AED; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.2s; margin-right: 0.5rem;">Copy to Clipboard</button>
+            <button type="button" id="confirm-btn" style="padding: 0.75rem 1.5rem; background: #10B981; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.2s;" disabled>I Saved It</button>
+        </div>
+    </div>
+
     <div class="auth-container">
+        <div class="overlay-loader" id="loader">
+            <div class="spinner"></div>
+            <div id="loader-text">Generating cryptographic keys...</div>
+        </div>
+
         <div class="header">
             <h1>ShieldShare</h1>
             <p>Create your secure cryptographic vault</p>
         </div>
 
-        <form action="/register" method="POST">
+        <form id="register-form" action="/register" method="POST">
+            <input type="hidden" name="public_key" id="pub_key_input">
+            <input type="hidden" name="encrypted_private_key" id="enc_priv_key_input">
+            <input type="hidden" name="private_key_salt" id="salt_input">
+            <input type="hidden" name="recovery_private_key" id="recovery_priv_key_input">
+
             <div class="form-group">
                 <label for="username">Username</label>
                 <input type="text" id="username" name="username" placeholder="Enter username" required autocomplete="username">
@@ -213,10 +264,11 @@
         const usernameInput = document.getElementById('username');
         const statusSpan = document.getElementById('username-status');
         const submitBtn = document.querySelector('.btn-submit');
-        let timeout = null;
+        let usernameTimeout = null;
 
+        // AJAX username availability check
         usernameInput.addEventListener('input', () => {
-            clearTimeout(timeout);
+            clearTimeout(usernameTimeout);
             const username = usernameInput.value.trim();
 
             if (!username) {
@@ -224,23 +276,22 @@
                 return;
             }
 
-            // Show checking status
             statusSpan.innerText = 'Checking availability...';
             statusSpan.style.color = '#9CA3AF';
 
-            timeout = setTimeout(() => {
+            usernameTimeout = setTimeout(() => {
                 fetch(`/check-username?username=${encodeURIComponent(username)}`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.exists) {
                             statusSpan.innerText = 'Username already exists';
-                            statusSpan.style.color = '#EF4444'; // Red
+                            statusSpan.style.color = '#EF4444';
                             submitBtn.disabled = true;
                             submitBtn.style.opacity = '0.5';
                             submitBtn.style.cursor = 'not-allowed';
                         } else {
                             statusSpan.innerText = 'Username is available';
-                            statusSpan.style.color = '#10B981'; // Green
+                            statusSpan.style.color = '#10B981';
                             submitBtn.disabled = false;
                             submitBtn.style.opacity = '1';
                             submitBtn.style.cursor = 'pointer';
@@ -250,7 +301,103 @@
                         console.error('Error checking username:', err);
                         statusSpan.innerText = '';
                     });
-            }, 300); // 300ms debounce
+            }, 300);
+        });
+
+        // Generate Recovery Phrase (16 char key)
+        function generateRecoveryKey() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let key = '';
+            for (let i = 0; i < 16; i++) {
+                if (i > 0 && i % 4 === 0) key += '-';
+                key += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return key;
+        }
+
+        // Form Submit interception
+        const registerForm = document.getElementById('register-form');
+        const loader = document.getElementById('loader');
+        const loaderText = document.getElementById('loader-text');
+        
+        const recoveryModal = document.getElementById('recovery-modal');
+        const recoveryKeyDisplay = document.getElementById('recovery-key-display');
+        const copyBtn = document.getElementById('copy-btn');
+        const confirmBtn = document.getElementById('confirm-btn');
+
+        let generatedRecoveryKey = '';
+
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const password = document.getElementById('password').value;
+            if (password.length < 6) {
+                alert('Password must be at least 6 characters.');
+                return;
+            }
+
+            loader.style.display = 'flex';
+            loaderText.innerText = 'Generating cryptographic keys (RSA-2048)...';
+
+            try {
+                // 1. Generate RSA key pair
+                const keys = await generateRSAKeyPair();
+                
+                loaderText.innerText = 'Deriving encryption keys...';
+                // 2. Export public key to PEM
+                const publicPEM = await exportPublicKeyPEM(keys.publicKey);
+                
+                // 3. Generate salt & derive key
+                const salt = window.crypto.getRandomValues(new Uint8Array(16));
+                const passwordDerivedKey = await deriveKeyFromPassword(password, salt);
+
+                loaderText.innerText = 'Encrypting private vault key...';
+                // 4. Encrypt private key with password derived key
+                const encPrivKey = await encryptPrivateKey(keys.privateKey, passwordDerivedKey);
+
+                // 5. Generate Recovery Key & encrypt private key with it
+                generatedRecoveryKey = generateRecoveryKey();
+                const recoveryDerivedKey = await deriveKeyFromPassword(generatedRecoveryKey, salt);
+                const recoveryEncPrivKey = await encryptPrivateKey(keys.privateKey, recoveryDerivedKey);
+
+                // Fill hidden inputs
+                document.getElementById('pub_key_input').value = publicPEM;
+                document.getElementById('enc_priv_key_input').value = encPrivKey;
+                document.getElementById('salt_input').value = arrayBufferToBase64(salt.buffer);
+                document.getElementById('recovery_priv_key_input').value = recoveryEncPrivKey;
+
+                // Hide loader
+                loader.style.display = 'none';
+
+                // Display recovery modal
+                recoveryKeyDisplay.innerText = generatedRecoveryKey;
+                recoveryModal.style.display = 'flex';
+
+            } catch (err) {
+                console.error(err);
+                alert('An error occurred during cryptographic key generation: ' + err.message);
+                loader.style.display = 'none';
+            }
+        });
+
+        // Copy button handler
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(generatedRecoveryKey).then(() => {
+                copyBtn.innerText = 'Copied!';
+                copyBtn.style.background = '#10B981';
+                confirmBtn.removeAttribute('disabled');
+                confirmBtn.style.cursor = 'pointer';
+            }).catch(err => {
+                alert('Failed to copy to clipboard. Please select the text and copy manually.');
+                confirmBtn.removeAttribute('disabled');
+                confirmBtn.style.cursor = 'pointer';
+            });
+        });
+
+        // Confirm button handler
+        confirmBtn.addEventListener('click', () => {
+            // Finally submit the form to the server!
+            registerForm.submit();
         });
     </script>
 </body>

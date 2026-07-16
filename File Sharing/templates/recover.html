@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShieldShare - Unlock Vault</title>
+    <title>ShieldShare - Restore Vault</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -223,85 +223,129 @@
     <div class="auth-container">
         <div class="overlay-loader" id="loader">
             <div class="spinner"></div>
-            <div>Decrypting private vault...</div>
+            <div id="loader-text">Decrypting vault private key...</div>
         </div>
 
         <div class="header">
             <h1>ShieldShare</h1>
-            <p>Unlock your secure cryptographic vault</p>
+            <p>Restore cryptographic vault access</p>
         </div>
 
         <div class="error-message" id="error-box"></div>
 
-        <form id="login-form">
+        <form id="recover-form">
             <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter username" required autocomplete="username">
             </div>
 
             <div class="form-group">
-                <label for="password">Master Password</label>
-                <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+                <label for="recovery_key">Recovery Key</label>
+                <input type="text" id="recovery_key" name="recovery_key" placeholder="XXXX-XXXX-XXXX-XXXX" required>
             </div>
 
-            <button type="submit" class="btn-submit">Unlock Vault</button>
+            <div class="form-group">
+                <label for="new_password">New Master Password</label>
+                <input type="password" id="new_password" name="new_password" placeholder="••••••••" required autocomplete="new-password">
+            </div>
+
+            <button type="submit" class="btn-submit">Restore & Reset Password</button>
         </form>
 
         <div class="footer-link">
-            Need a new vault? <a href="/register">Create Vault</a>
-            <br><br>
-            Forgot Password? <a href="/recover" style="color: #FCA5A5;">Restore Vault</a>
+            Remembered password? <a href="/login">Unlock Vault</a>
         </div>
     </div>
 
     <script>
-        const loginForm = document.getElementById('login-form');
+        const recoverForm = document.getElementById('recover-form');
         const loader = document.getElementById('loader');
+        const loaderText = document.getElementById('loader-text');
         const errorBox = document.getElementById('error-box');
 
-        loginForm.addEventListener('submit', async (e) => {
+        recoverForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             errorBox.style.display = 'none';
             loader.style.display = 'flex';
+            loaderText.innerText = 'Fetching challenge...';
 
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
+            const username = document.getElementById('username').value.trim();
+            const recoveryKey = document.getElementById('recovery_key').value.trim().toUpperCase();
+            const newPassword = document.getElementById('new_password').value;
 
             try {
-                // 1. Submit login request to get encrypted private key & salt
-                const response = await fetch('/login', {
+                // 1. Get recovery challenge
+                const challengeResponse = await fetch('/get-recovery-challenge');
+                const challengeData = await challengeResponse.json();
+                const challenge = challengeData.challenge;
+
+                loaderText.innerText = 'Retrieving encrypted vault metadata...';
+                
+                // 2. Fetch recovery payload (encrypted key + salt)
+                const payloadResponse = await fetch(`/get-recovery-payload?username=${encodeURIComponent(username)}`);
+                if (!payloadResponse.ok) {
+                    const errorData = await payloadResponse.json();
+                    throw new Error(errorData.message || 'User vault not found.');
+                }
+                const payloadData = await payloadResponse.json();
+
+                loaderText.innerText = 'Deriving recovery key...';
+
+                // 3. Derive key from Recovery Key + salt
+                const saltBuffer = base64ToArrayBuffer(payloadData.private_key_salt);
+                const recoveryDerivedKey = await deriveKeyFromPassword(recoveryKey, saltBuffer);
+
+                loaderText.innerText = 'Decrypting vault private key...';
+
+                // 4. Decrypt private key with recovery key
+                let privateKey;
+                try {
+                    privateKey = await decryptPrivateKey(payloadData.recovery_private_key, recoveryDerivedKey);
+                } catch (decErr) {
+                    throw new Error('Invalid Recovery Key. Decryption failed.');
+                }
+
+                loaderText.innerText = 'Signing server challenge...';
+
+                // 5. Sign the challenge with the decrypted private key to prove ownership
+                // Sign challenge string using RSASSA-PKCS1-v1_5
+                const encoder = new TextEncoder();
+                const challengeBuffer = encoder.encode(challenge);
+                const signatureBuffer = await window.crypto.subtle.sign(
+                    { name: "RSASSA-PKCS1-v1_5" },
+                    privateKey,
+                    challengeBuffer
+                );
+                const signatureBase64 = arrayBufferToBase64(signatureBuffer);
+
+                loaderText.innerText = 'Encrypting private key with new password...';
+
+                // 6. Re-encrypt private key with new password-derived key
+                const newPasswordDerivedKey = await deriveKeyFromPassword(newPassword, saltBuffer);
+                const newEncryptedPrivateKey = await encryptPrivateKey(privateKey, newPasswordDerivedKey);
+
+                loaderText.innerText = 'Uploading new credentials...';
+
+                // 7. Submit recovery request
+                const recoverResponse = await fetch('/recover', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({
+                        username: username,
+                        challenge: challenge,
+                        signature: signatureBase64,
+                        new_encrypted_private_key: newEncryptedPrivateKey,
+                        new_password: newPassword // server hashes this to check credentials during next logins
+                    })
                 });
 
-                const data = await response.json();
-
-                if (!response.ok || data.status !== 'success') {
-                    throw new Error(data.message || 'Invalid Email or Password.');
+                const recoverData = await recoverResponse.json();
+                if (!recoverResponse.ok || recoverData.status !== 'success') {
+                    throw new Error(recoverData.message || 'Vault restoration failed.');
                 }
 
-                // 2. Derive password key from login password + salt
-                const saltBuffer = base64ToArrayBuffer(data.private_key_salt);
-                const passwordDerivedKey = await deriveKeyFromPassword(password, saltBuffer);
-
-                // 3. Decrypt the private key locally in the browser
-                const decryptedPrivateKey = await decryptPrivateKey(data.encrypted_private_key, passwordDerivedKey);
-                
-                // Export private key back to PKCS8 and serialize as PEM
-                const exportedPrivKey = await window.crypto.subtle.exportKey("pkcs8", decryptedPrivateKey);
-                const privKeyB64 = arrayBufferToBase64(exportedPrivKey);
-                let privatePEM = "-----BEGIN PRIVATE KEY-----\n";
-                for (let i = 0; i < privKeyB64.length; i += 64) {
-                    privatePEM += privKeyB64.substring(i, i + 64) + "\n";
-                }
-                privatePEM += "-----END PRIVATE KEY-----";
-
-                // 4. Save decrypted private key PEM in browser storage (never sent to server!)
-                window.sessionStorage.setItem('private_key_pem', privatePEM);
-
-                // 5. Redirect to dashboard
-                window.location.href = '/dashboard';
+                alert('Vault restored successfully! Please log in with your new password.');
+                window.location.href = '/login';
 
             } catch (err) {
                 console.error(err);

@@ -26,8 +26,9 @@ CREATE TABLE IF NOT EXISTS users (
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     public_key TEXT NOT NULL,
-    encrypted_private_key BLOB NOT NULL,
-    private_key_salt BLOB NOT NULL
+    encrypted_private_key TEXT NOT NULL,
+    private_key_salt TEXT NOT NULL,
+    recovery_private_key TEXT NOT NULL
 )
 """)
 
@@ -51,7 +52,7 @@ CREATE TABLE IF NOT EXISTS shares (
     file_id INTEGER NOT NULL,
     shared_with_user_id INTEGER NOT NULL,
     shared_by_user_id INTEGER NOT NULL,
-    encrypted_aes_key BLOB NOT NULL,
+    encrypted_aes_key TEXT NOT NULL,
     FOREIGN KEY(file_id) REFERENCES files(id) ON DELETE CASCADE,
     FOREIGN KEY(shared_with_user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY(shared_by_user_id) REFERENCES users(id) ON DELETE CASCADE
