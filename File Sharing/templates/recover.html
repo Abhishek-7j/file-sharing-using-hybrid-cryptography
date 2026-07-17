@@ -7,15 +7,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0B0F19;
-            --card-bg: rgba(17, 24, 39, 0.7);
+            --bg-color: #080B10;
+            --card-bg: rgba(13, 17, 28, 0.7);
             --primary: #4F46E5;
             --primary-hover: #4338CA;
             --secondary: #7C3AED;
             --text-main: #F3F4F6;
             --text-muted: #9CA3AF;
-            --border-color: rgba(255, 255, 255, 0.08);
-            --glow-color: rgba(79, 70, 229, 0.4);
+            --border-color: rgba(255, 255, 255, 0.06);
+            --glow-color: rgba(124, 58, 237, 0.35);
         }
 
         * {
@@ -36,66 +36,86 @@
             position: relative;
         }
 
-        /* Abstract background shapes */
+        /* Abstract dynamic grid overlay */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 40px 40px;
+            top: 0; left: 0;
+            z-index: 0;
+        }
+
         .shape {
             position: absolute;
             border-radius: 50%;
-            filter: blur(100px);
+            filter: blur(120px);
             z-index: 1;
-            opacity: 0.5;
+            opacity: 0.35;
+            animation: float 10s ease-in-out infinite alternate;
         }
         .shape-1 {
-            width: 400px;
-            height: 400px;
+            width: 500px;
+            height: 500px;
             background: var(--primary);
-            top: -100px;
-            left: -100px;
+            top: -150px;
+            left: -150px;
         }
         .shape-2 {
-            width: 300px;
-            height: 300px;
+            width: 400px;
+            height: 400px;
             background: var(--secondary);
-            bottom: -50px;
-            right: -50px;
+            bottom: -100px;
+            right: -100px;
+            animation-delay: -5s;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(40px, 30px) scale(1.15); }
         }
 
         .auth-container {
             position: relative;
             z-index: 10;
             width: 100%;
-            max-width: 450px;
-            padding: 2.5rem;
+            max-width: 440px;
+            padding: 3rem 2.5rem;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 24px;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.8s ease-out;
+            border-radius: 28px;
+            backdrop-filter: blur(24px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(24px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         .header {
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 2.25rem;
         }
 
         .header h1 {
-            font-size: 2.2rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #A5B4FC 0%, #C7D2FE 50%, #818CF8 100%);
+            font-size: 2.4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 30%, #818CF8 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 0.5rem;
-            letter-spacing: -0.5px;
+            letter-spacing: -1px;
         }
 
         .header p {
             color: var(--text-muted);
             font-size: 0.95rem;
+            font-weight: 400;
         }
 
         .form-group {
@@ -106,48 +126,53 @@
         .form-group label {
             display: block;
             margin-bottom: 0.5rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--text-main);
-            letter-spacing: 0.2px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #C7D2FE;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
         }
 
         .form-group input {
             width: 100%;
-            padding: 0.85rem 1rem;
-            background: rgba(31, 41, 55, 0.5);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
+            padding: 0.9rem 1.1rem;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
             color: var(--text-main);
             font-size: 0.95rem;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             outline: none;
         }
 
+        .form-group input::placeholder {
+            color: #4B5563;
+        }
+
         .form-group input:focus {
-            border-color: var(--primary);
+            border-color: var(--secondary);
             box-shadow: 0 0 0 4px var(--glow-color);
-            background: rgba(31, 41, 55, 0.8);
+            background: rgba(15, 23, 42, 0.85);
         }
 
         .btn-submit {
             width: 100%;
-            padding: 0.9rem;
+            padding: 1rem;
             background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             border: none;
-            border-radius: 12px;
+            border-radius: 14px;
             color: white;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 1rem;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
-            margin-top: 0.5rem;
+            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.3);
+            margin-top: 0.75rem;
         }
 
         .btn-submit:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.6);
+            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.5);
         }
 
         .btn-submit:active {
@@ -155,12 +180,13 @@
         }
 
         .error-message {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.25);
             color: #FCA5A5;
-            padding: 0.75rem 1rem;
-            border-radius: 12px;
-            font-size: 0.875rem;
+            padding: 0.85rem 1.1rem;
+            border-radius: 14px;
+            font-size: 0.9rem;
+            font-weight: 500;
             margin-bottom: 1.5rem;
             text-align: center;
             display: none;
@@ -168,15 +194,16 @@
 
         .footer-link {
             text-align: center;
-            margin-top: 1.5rem;
+            margin-top: 1.75rem;
             font-size: 0.9rem;
             color: var(--text-muted);
+            line-height: 1.6;
         }
 
         .footer-link a {
             color: #818CF8;
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 600;
             transition: color 0.2s ease;
         }
 
@@ -189,24 +216,25 @@
             display: none;
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(11, 15, 25, 0.8);
+            background: rgba(8, 11, 16, 0.9);
             z-index: 100;
-            border-radius: 24px;
+            border-radius: 28px;
             align-items: center;
             justify-content: center;
             flex-direction: column;
             color: white;
             font-weight: 600;
             font-size: 1.1rem;
+            backdrop-filter: blur(4px);
         }
 
         .spinner {
-            width: 40px; height: 40px;
-            border: 4px solid rgba(255,255,255,0.1);
+            width: 44px; height: 44px;
+            border: 4px solid rgba(255,255,255,0.05);
             border-top: 4px solid var(--secondary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-bottom: 1rem;
+            margin-bottom: 1.25rem;
         }
 
         @keyframes spin {
@@ -308,7 +336,6 @@
                 loaderText.innerText = 'Signing server challenge...';
 
                 // 5. Sign the challenge with the decrypted private key to prove ownership
-                // Sign challenge string using RSASSA-PKCS1-v1_5
                 const encoder = new TextEncoder();
                 const challengeBuffer = encoder.encode(challenge);
                 const signatureBuffer = await window.crypto.subtle.sign(
@@ -335,7 +362,7 @@
                         challenge: challenge,
                         signature: signatureBase64,
                         new_encrypted_private_key: newEncryptedPrivateKey,
-                        new_password: newPassword // server hashes this to check credentials during next logins
+                        new_password: newPassword
                     })
                 });
 
