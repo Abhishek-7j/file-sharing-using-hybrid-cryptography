@@ -279,12 +279,12 @@ assert b'"exists":false' in res_check_new.data
 print("OK - Username checking API verified successfully!")
 
 
-# Test 9: Cryptographic Password Recovery Verification
+# Test 9: Zero-Knowledge Password Recovery Verification
 print("\n--- Test 9: Zero-Knowledge Password Recovery ---")
-# 1. Get recovery challenge
-res_challenge = client.get("/get-recovery-challenge")
+# 1. Get recovery challenge (encrypted with public key)
+res_challenge = client.get("/get-recovery-challenge?username=alice")
 assert res_challenge.status_code == 200
-challenge = res_challenge.get_json()["challenge"]
+enc_challenge_b64 = res_challenge.get_json()["encrypted_challenge"]
 
 # 2. Get recovery payload for Alice
 res_payload = client.get("/get-recovery-payload?username=alice")
@@ -298,13 +298,17 @@ rec_derived_key = client_derive_key(alice_recovery_key, rec_salt_bytes)
 recovered_priv_pem = client_decrypt_private_key(rec_enc_priv_bytes, rec_derived_key)
 assert recovered_priv_pem == alice_priv_pem
 
-# 4. Sign challenge using the recovered private key (PKCS1v15)
+# 4. Decrypt challenge using the recovered private key
 private_key_obj = serialization.load_pem_private_key(recovered_priv_pem, password=None)
-signature = private_key_obj.sign(
-    challenge.encode(),
-    padding.PKCS1v15(),
-    hashes.SHA256()
+decrypted_challenge_bytes = private_key_obj.decrypt(
+    base64.b64decode(enc_challenge_b64),
+    padding.OAEP(
+        mgf=padding.MGF1(algorithm=hashes.SHA256()),
+        algorithm=hashes.SHA256(),
+        label=None
+    )
 )
+decrypted_challenge = decrypted_challenge_bytes.decode()
 
 # 5. Encrypt private key with new password
 new_password = "alice_new_password"
@@ -314,8 +318,7 @@ new_encrypted_private_key = client_encrypt_private_key(recovered_priv_pem, new_d
 # 6. Post recovery request to server
 res_recover = client.post("/recover", json={
     "username": "alice",
-    "challenge": challenge,
-    "signature": base64.b64encode(signature).decode(),
+    "decrypted_challenge": decrypted_challenge,
     "new_encrypted_private_key": base64.b64encode(new_encrypted_private_key).decode(),
     "new_password": new_password
 })

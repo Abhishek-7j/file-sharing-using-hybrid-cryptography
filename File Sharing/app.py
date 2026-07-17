@@ -508,9 +508,42 @@ def share():
 
 @app.route("/get-recovery-challenge")
 def get_recovery_challenge():
+    username = request.args.get("username", "").strip()
+    if not username:
+        return {"status": "error", "message": "Username is required"}, 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    is_postgres = not isinstance(conn, sqlite3.Connection)
+    query = "SELECT public_key FROM users WHERE username = %s" if is_postgres else "SELECT public_key FROM users WHERE username = ?"
+    cursor.execute(query, (username,))
+    user = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not user:
+        return {"status": "error", "message": "User vault not found"}, 404
+
     challenge = uuid.uuid4().hex
     session["recovery_challenge"] = challenge
-    return {"challenge": challenge}
+
+    # Encrypt challenge using user's public key
+    try:
+        public_key_pem = user["public_key"].encode()
+        pub_key = serialization.load_pem_public_key(public_key_pem)
+        encrypted_challenge = pub_key.encrypt(
+            challenge.encode(),
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
+            )
+        )
+        return {
+            "encrypted_challenge": base64.b64encode(encrypted_challenge).decode()
+        }
+    except Exception as e:
+        return {"status": "error", "message": f"Encryption failed: {str(e)}"}, 500
 
 @app.route("/get-recovery-payload")
 def get_recovery_payload():
@@ -546,68 +579,35 @@ def recover():
         if not data:
             return {"status": "error", "message": "Missing JSON payload"}, 400
         username = data.get("username", "").strip()
-        challenge = data.get("challenge")
-        signature = data.get("signature")
+        decrypted_challenge = data.get("decrypted_challenge")
         new_encrypted_private_key = data.get("new_encrypted_private_key")
         new_password = data.get("new_password")
 
-        if not username or not challenge or not signature or not new_encrypted_private_key or not new_password:
+        if not username or not decrypted_challenge or not new_encrypted_private_key or not new_password:
             return {"status": "error", "message": "Missing recovery details"}, 400
 
         # 1. Verify challenge matches session
-        if challenge != session.get("recovery_challenge"):
-            return {"status": "error", "message": "Invalid or expired challenge"}, 400
+        if decrypted_challenge != session.get("recovery_challenge"):
+            return {"status": "error", "message": "Challenge verification failed. possession proof invalid."}, 400
 
         conn = get_db_connection()
         cursor = conn.cursor()
         is_postgres = not isinstance(conn, sqlite3.Connection)
         
-        # 2. Fetch public key
-        query_user = "SELECT public_key FROM users WHERE username = %s" if is_postgres else "SELECT public_key FROM users WHERE username = ?"
-        cursor.execute(query_user, (username,))
-        user = cursor.fetchone()
-        
-        if not user:
-            cursor.close()
-            conn.close()
-            return {"status": "error", "message": "User not found"}, 404
-
+        # 2. Update password and encrypted private key
+        new_password_hash = generate_password_hash(new_password)
+        query_update = """
+        UPDATE users SET password_hash = %s, encrypted_private_key = %s WHERE username = %s
+        """ if is_postgres else """
+        UPDATE users SET password_hash = ?, encrypted_private_key = ? WHERE username = ?
+        """
         try:
-            # 3. Verify signature to prove ownership of the decrypted private key
-            public_key_pem = user["public_key"].encode()
-            pub_key = serialization.load_pem_public_key(public_key_pem)
-
-            sig_bytes = base64.b64decode(signature)
-            challenge_bytes = challenge.encode()
-
-            pub_key.verify(
-                sig_bytes,
-                challenge_bytes,
-                padding.PKCS1v15(),
-                hashes.SHA256()
-            )
-            
-            # 4. Update password and encrypted private key
-            new_password_hash = generate_password_hash(new_password)
-            query_update = """
-            UPDATE users SET password_hash = %s, encrypted_private_key = %s WHERE username = %s
-            """ if is_postgres else """
-            UPDATE users SET password_hash = ?, encrypted_private_key = ? WHERE username = ?
-            """
             cursor.execute(query_update, (new_password_hash, new_encrypted_private_key, username))
             conn.commit()
-            
             cursor.close()
             conn.close()
-            
-            # Clear recovery challenge
             session.pop("recovery_challenge", None)
             return {"status": "success"}
-
-        except InvalidSignature:
-            cursor.close()
-            conn.close()
-            return {"status": "error", "message": "Signature verification failed. Possession proof invalid."}, 400
         except Exception as e:
             cursor.close()
             conn.close()

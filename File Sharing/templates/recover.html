@@ -291,6 +291,11 @@
         const loaderText = document.getElementById('loader-text');
         const errorBox = document.getElementById('error-box');
 
+        // Helper to convert array buffer to string
+        function bufferToString(buf) {
+            return new TextDecoder().decode(buf);
+        }
+
         recoverForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             errorBox.style.display = 'none';
@@ -302,10 +307,14 @@
             const newPassword = document.getElementById('new_password').value;
 
             try {
-                // 1. Get recovery challenge
-                const challengeResponse = await fetch('/get-recovery-challenge');
+                // 1. Get recovery challenge (encrypted with public key)
+                const challengeResponse = await fetch(`/get-recovery-challenge?username=${encodeURIComponent(username)}`);
+                if (!challengeResponse.ok) {
+                    const challengeErr = await challengeResponse.json();
+                    throw new Error(challengeErr.message || 'Failed to get challenge.');
+                }
                 const challengeData = await challengeResponse.json();
-                const challenge = challengeData.challenge;
+                const encryptedChallengeB64 = challengeData.encrypted_challenge;
 
                 loaderText.innerText = 'Retrieving encrypted vault metadata...';
                 
@@ -333,17 +342,16 @@
                     throw new Error('Invalid Recovery Key. Decryption failed.');
                 }
 
-                loaderText.innerText = 'Signing server challenge...';
+                loaderText.innerText = 'Decrypting server challenge...';
 
-                // 5. Sign the challenge with the decrypted private key to prove ownership
-                const encoder = new TextEncoder();
-                const challengeBuffer = encoder.encode(challenge);
-                const signatureBuffer = await window.crypto.subtle.sign(
-                    { name: "RSASSA-PKCS1-v1_5" },
+                // 5. Decrypt challenge using decrypted private key (Proof of Possession)
+                const encryptedChallengeBuffer = base64ToArrayBuffer(encryptedChallengeB64);
+                const decryptedChallengeBuffer = await window.crypto.subtle.decrypt(
+                    { name: "RSA-OAEP" },
                     privateKey,
-                    challengeBuffer
+                    encryptedChallengeBuffer
                 );
-                const signatureBase64 = arrayBufferToBase64(signatureBuffer);
+                const decryptedChallenge = bufferToString(decryptedChallengeBuffer);
 
                 loaderText.innerText = 'Encrypting private key with new password...';
 
@@ -359,8 +367,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         username: username,
-                        challenge: challenge,
-                        signature: signatureBase64,
+                        decrypted_challenge: decryptedChallenge,
                         new_encrypted_private_key: newEncryptedPrivateKey,
                         new_password: newPassword
                     })
