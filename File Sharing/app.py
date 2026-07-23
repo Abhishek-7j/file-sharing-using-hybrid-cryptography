@@ -548,18 +548,19 @@ def get_recovery_challenge():
 @app.route("/get-recovery-payload")
 def get_recovery_payload():
     username = request.args.get("username", "").strip()
-    if not username:
-        return {"status": "error", "message": "Missing username"}, 400
+    email = request.args.get("email", "").strip()
+    if not username or not email:
+        return {"status": "error", "message": "Missing username or email details"}, 400
 
     conn = get_db_connection()
     cursor = conn.cursor()
     is_postgres = not isinstance(conn, sqlite3.Connection)
     query = """
-    SELECT recovery_private_key, private_key_salt FROM users WHERE username = %s
+    SELECT recovery_private_key, private_key_salt FROM users WHERE username = %s AND email = %s
     """ if is_postgres else """
-    SELECT recovery_private_key, private_key_salt FROM users WHERE username = ?
+    SELECT recovery_private_key, private_key_salt FROM users WHERE username = ? AND email = ?
     """
-    cursor.execute(query, (username,))
+    cursor.execute(query, (username, email))
     user = cursor.fetchone()
     cursor.close()
     conn.close()
@@ -570,7 +571,7 @@ def get_recovery_payload():
             "private_key_salt": user["private_key_salt"]
         }
     else:
-        return {"status": "error", "message": "User vault not found."}, 404
+        return {"status": "error", "message": "User vault with matching username and email not found."}, 404
 
 @app.route("/recover", methods=["GET", "POST"])
 def recover():

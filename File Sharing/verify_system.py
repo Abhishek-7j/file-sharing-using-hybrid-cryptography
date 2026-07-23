@@ -287,7 +287,7 @@ assert res_challenge.status_code == 200
 enc_challenge_b64 = res_challenge.get_json()["encrypted_challenge"]
 
 # 2. Get recovery payload for Alice
-res_payload = client.get("/get-recovery-payload?username=alice")
+res_payload = client.get("/get-recovery-payload?username=alice&email=alice@test.com")
 assert res_payload.status_code == 200
 payload = res_payload.get_json()
 

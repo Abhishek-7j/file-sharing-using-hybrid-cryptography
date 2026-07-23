@@ -263,6 +263,11 @@
 
         <form id="recover-form">
             <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email">
+            </div>
+
+            <div class="form-group">
                 <label for="username">Username</label>
                 <input type="text" id="username" name="username" placeholder="Enter username" required autocomplete="username">
             </div>
@@ -302,6 +307,7 @@
             loader.style.display = 'flex';
             loaderText.innerText = 'Fetching challenge...';
 
+            const email = document.getElementById('email').value.trim();
             const username = document.getElementById('username').value.trim();
             const recoveryKey = document.getElementById('recovery_key').value.trim().toUpperCase();
             const newPassword = document.getElementById('new_password').value;
@@ -318,8 +324,8 @@
 
                 loaderText.innerText = 'Retrieving encrypted vault metadata...';
                 
-                // 2. Fetch recovery payload (encrypted key + salt)
-                const payloadResponse = await fetch(`/get-recovery-payload?username=${encodeURIComponent(username)}`);
+                // 2. Fetch recovery payload (encrypted key + salt) with both username & email
+                const payloadResponse = await fetch(`/get-recovery-payload?username=${encodeURIComponent(username)}&email=${encodeURIComponent(email)}`);
                 if (!payloadResponse.ok) {
                     const errorData = await payloadResponse.json();
                     throw new Error(errorData.message || 'User vault not found.');
