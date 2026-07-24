@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, session, redirect, send_file
+from flask import Flask, render_template, request, session, redirect, send_file, Response
+from functools import wraps
 from flask_session import Session
 import sqlite3
 import os
@@ -614,12 +615,42 @@ def recover():
             conn.close()
             return {"status": "error", "message": str(e)}, 500
             
-    return render_template("recover.html")
-
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/login")
+
+def requires_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if not auth or not (auth.username == "admin" and auth.password == "shieldshare_admin_2026"):
+            return Response(
+                "Could not verify your access level for that URL.\n"
+                "You have to login with proper credentials", 401,
+                {"WWW-Authenticate": 'Basic realm="Login Required"'}
+            )
+        return f(*args, **kwargs)
+    return decorated
+
+@app.route("/admin/users")
+@requires_auth
+def admin_users():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    is_postgres = not isinstance(conn, sqlite3.Connection)
+    query = "SELECT id, username, email, public_key, private_key_salt FROM users ORDER BY id DESC"
+    cursor.execute(query)
+    users = cursor.fetchall()
+    
+    # Also fetch files count
+    cursor.execute("SELECT COUNT(*) as count FROM files")
+    files_count = cursor.fetchone()["count"] if is_postgres else cursor.fetchone()[0]
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template("admin_users.html", users=users, files_count=files_count)
 
 if __name__ == "__main__":
     app.run(debug=True)
