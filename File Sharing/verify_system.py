@@ -14,6 +14,11 @@ client = app.test_client()
 
 # Recreate database to ensure a clean test
 print("Initializing database schema...")
+if os.path.exists("database.db"):
+    try:
+        os.remove("database.db")
+    except Exception as e:
+        pass
 os.system("venv\\Scripts\\python database.py")
 
 # Helper: Simulate client-side key derivation and encryption (WebCrypto equivalent)

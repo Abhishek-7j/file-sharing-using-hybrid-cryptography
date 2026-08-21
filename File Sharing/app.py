@@ -254,7 +254,7 @@ def dashboard():
     cursor.execute(query_own, (user_id,))
     own_files = cursor.fetchall()
 
-    # 3. Query shared files
+    # 3. Query shared files (shared WITH me)
     query_shared = """
     SELECT files.id, files.filename, files.file_size, files.upload_date, users.username AS owner_username 
     FROM files 
@@ -273,6 +273,25 @@ def dashboard():
     cursor.execute(query_shared, (user_id, user_id))
     shared_files = cursor.fetchall()
 
+    # 4. Query outbound shares (files shared BY me to other users)
+    query_outbound = """
+    SELECT files.id AS file_id, files.filename, files.file_size, files.upload_date, users.username AS recipient_username, users.email AS recipient_email
+    FROM shares
+    JOIN files ON shares.file_id = files.id
+    JOIN users ON shares.shared_with_user_id = users.id
+    WHERE shares.shared_by_user_id = %s AND shares.shared_with_user_id != %s
+    ORDER BY files.upload_date DESC
+    """ if is_postgres else """
+    SELECT files.id AS file_id, files.filename, files.file_size, files.upload_date, users.username AS recipient_username, users.email AS recipient_email
+    FROM shares
+    JOIN files ON shares.file_id = files.id
+    JOIN users ON shares.shared_with_user_id = users.id
+    WHERE shares.shared_by_user_id = ? AND shares.shared_with_user_id != ?
+    ORDER BY files.upload_date DESC
+    """
+    cursor.execute(query_outbound, (user_id, user_id))
+    outbound_shares = cursor.fetchall()
+
     cursor.close()
     conn.close()
 
@@ -284,6 +303,7 @@ def dashboard():
         username=session["username"],
         own_files=own_files,
         shared_files=shared_files,
+        outbound_shares=outbound_shares,
         owner_public_key=owner_public_key,
         message=message,
         error=error

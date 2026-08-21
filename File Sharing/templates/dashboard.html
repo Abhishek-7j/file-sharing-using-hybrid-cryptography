@@ -395,19 +395,20 @@
 
         .filter-tabs {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.4rem;
             background: rgba(11, 15, 25, 0.5);
             padding: 0.3rem;
             border-radius: 12px;
             border: 1px solid var(--panel-border);
+            flex-wrap: wrap;
         }
 
         .tab-btn {
-            padding: 0.45rem 1rem;
+            padding: 0.45rem 0.9rem;
             border: none;
             background: transparent;
             color: var(--text-muted);
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             font-weight: 600;
             border-radius: 8px;
             cursor: pointer;
@@ -621,6 +622,22 @@
             background: rgba(255, 255, 255, 0.12);
         }
 
+        .btn-revoke {
+            background: rgba(244, 63, 94, 0.15);
+            color: #F43F5E;
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-revoke:hover {
+            background: rgba(244, 63, 94, 0.28);
+        }
+
         .no-data {
             text-align: center;
             color: var(--text-muted);
@@ -797,7 +814,7 @@
         <div class="logo-group">
             <div class="logo">ShieldShare</div>
             <span class="badge-zero-knowledge">
-                <span class="pulse-dot"></span> Zero-Knowledge E2EE
+                <span class="pulse-dot"></span> Zero-Knowledge E2EE Vault
             </span>
         </div>
         <div class="user-menu">
@@ -811,41 +828,41 @@
 
     <div class="container">
 
-        <!-- Top Cryptographic Metrics Banner -->
+        <!-- Top Cryptographic & Sharing Metrics Banner -->
         <div class="metrics-banner">
             <div class="metric-card">
                 <div class="metric-icon-box icon-box-purple">🛡️</div>
                 <div class="metric-details">
-                    <div class="label">Security Architecture</div>
-                    <div class="value" style="color: #A78BFA;">A+ E2EE Active</div>
-                    <div class="subtext">Client-Side WebCrypto</div>
+                    <div class="label">Vault Engine</div>
+                    <div class="value" style="color: #A78BFA;">Zero-Knowledge E2EE</div>
+                    <div class="subtext">AES-256-GCM + RSA-2048</div>
                 </div>
             </div>
 
             <div class="metric-card">
-                <div class="metric-icon-box icon-box-cyan">⚡</div>
+                <div class="metric-icon-box icon-box-cyan">📁</div>
                 <div class="metric-details">
-                    <div class="label">Hybrid Ciphers</div>
-                    <div class="value" style="color: #38BDF8;">AES-256 + RSA</div>
-                    <div class="subtext">GCM (256-bit) & OAEP (2048-bit)</div>
+                    <div class="label">Owned Vault Files</div>
+                    <div class="value" style="color: #38BDF8;">{{ own_files|length }} Files</div>
+                    <div class="subtext">Personal Storage Footprint</div>
                 </div>
             </div>
 
             <div class="metric-card">
-                <div class="metric-icon-box icon-box-emerald">📦</div>
+                <div class="metric-icon-box icon-box-emerald">📤</div>
                 <div class="metric-details">
-                    <div class="label">Vault Volume</div>
-                    <div class="value" id="total-volume-val" style="color: #34D399;">Calculated...</div>
-                    <div class="subtext">{{ own_files|length }} Personal | {{ shared_files|length }} Shared</div>
+                    <div class="label">Files Shared By Me</div>
+                    <div class="value" style="color: #34D399;">{{ outbound_shares|length }} Active Shares</div>
+                    <div class="subtext">Outbound Key Exchanges</div>
                 </div>
             </div>
 
             <div class="metric-card">
-                <div class="metric-icon-box icon-box-amber">🔑</div>
+                <div class="metric-icon-box icon-box-amber">📥</div>
                 <div class="metric-details">
-                    <div class="label">Public Key Fingerprint</div>
-                    <div class="value" id="pub-key-fp" style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: #FBBF24;">Computing...</div>
-                    <div class="subtext">RSA-OAEP 2048-bit SPKI</div>
+                    <div class="label">Files Received</div>
+                    <div class="value" style="color: #FBBF24;">{{ shared_files|length }} Received Files</div>
+                    <div class="subtext">Inbound Access Grants</div>
                 </div>
             </div>
         </div>
@@ -887,20 +904,21 @@
             </form>
         </div>
 
-        <!-- Search & Filter Controls -->
+        <!-- Search & Filter Controls Bar -->
         <div class="controls-bar">
             <div class="search-box">
                 <span class="search-icon">🔍</span>
-                <input type="text" id="search-input" class="search-input" placeholder="Filter vault files by name..." onkeyup="filterFiles()">
+                <input type="text" id="search-input" class="search-input" placeholder="Search files by name..." onkeyup="filterFiles()">
             </div>
             <div class="filter-tabs">
-                <button class="tab-btn active" id="tab-all" onclick="setFilter('all')">All Files</button>
+                <button class="tab-btn active" id="tab-all" onclick="setFilter('all')">All Vault Views</button>
                 <button class="tab-btn" id="tab-own" onclick="setFilter('own')">My Vault ({{ own_files|length }})</button>
-                <button class="tab-btn" id="tab-shared" onclick="setFilter('shared')">Shared Access ({{ shared_files|length }})</button>
+                <button class="tab-btn" id="tab-shared" onclick="setFilter('shared')">Received Shares ({{ shared_files|length }})</button>
+                <button class="tab-btn" id="tab-outbound" onclick="setFilter('outbound')">Outbound Shared By Me ({{ outbound_shares|length }})</button>
             </div>
         </div>
 
-        <!-- My Vault Files Panel -->
+        <!-- Panel 1: My Vault Files -->
         <div class="panel" id="panel-own">
             <div class="overlay-loader" id="own-loader">
                 <div class="spinner"></div>
@@ -920,7 +938,7 @@
                             <th>Upload Date (Local)</th>
                             <th>Size</th>
                             <th>Encryption Spec</th>
-                            <th>Access Control</th>
+                            <th>Share Vault Access</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -951,7 +969,7 @@
                                 <td>
                                     <div style="display: flex; align-items: center; gap: 0.4rem;">
                                         <form class="share-form" onsubmit="shareFile(event, {{ file.id }})">
-                                            <input type="text" class="share-input" placeholder="User" required>
+                                            <input type="text" class="share-input" placeholder="Username" required>
                                             <button type="submit" class="btn-action btn-share">Share</button>
                                         </form>
                                         <button type="button" onclick="openAccessManager({{ file.id }}, '{{ file.filename }}')" class="btn-action btn-grants" title="View & Revoke Access">👥 Grants</button>
@@ -976,7 +994,68 @@
             </div>
         </div>
 
-        <!-- Shared Files Panel -->
+        <!-- Panel 2: Outbound Shares Sent (Files Shared BY Me to Others) -->
+        <div class="panel" id="panel-outbound">
+            <div class="panel-title">
+                <span>📤 Outbound Shares Sent (Shared By Me)</span>
+                <span style="font-size: 0.8rem; color: #38BDF8; font-weight: 600;">Recipient Access Verification Ledger</span>
+            </div>
+            
+            <div class="table-container">
+                <table id="outbound-files-table">
+                    <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Recipient Details</th>
+                            <th>Upload Date (Local)</th>
+                            <th>Size</th>
+                            <th>Key Encryption</th>
+                            <th>Access Control</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if outbound_shares %}
+                            {% for share_item in outbound_shares %}
+                            <tr class="file-row outbound-row" data-filename="{{ share_item.filename | lower }}">
+                                <td>
+                                    <div class="filename-container">
+                                        <span class="file-icon">📤</span>
+                                        <strong>{{ share_item.filename }}</strong>
+                                        <span class="ext-tag">{{ share_item.filename.split('.')[-1].upper() if '.' in share_item.filename else 'FILE' }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong style="color: #38BDF8; font-size: 0.92rem;">👤 {{ share_item.recipient_username }}</strong>
+                                        <div style="font-size: 0.78rem; color: #64748B;">${share_item.recipient_email}</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="date-cell" data-utc="{{ share_item.upload_date }}">
+                                        <span class="formatted-date">{{ share_item.upload_date }}</span>
+                                        <span class="relative-time">UTC</span>
+                                    </div>
+                                </td>
+                                <td><strong style="color: #E2E8F0;">{{ (share_item.file_size / 1024) | round(2) }} KB</strong></td>
+                                <td>
+                                    <span class="badge badge-rsa">RSA-OAEP-2048</span>
+                                </td>
+                                <td>
+                                    <button onclick="revokeUserShare({{ share_item.file_id }}, '{{ share_item.recipient_username }}')" class="btn-revoke">🚫 Revoke Share</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="no-data">You have not shared any files with other users yet.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Panel 3: Shared With Me (Received Files) -->
         <div class="panel" id="panel-shared">
             <div class="overlay-loader" id="shared-loader">
                 <div class="spinner"></div>
@@ -984,7 +1063,7 @@
             </div>
 
             <div class="panel-title">
-                <span>🤝 Shared With Me</span>
+                <span>🤝 Shared With Me (Received Files)</span>
                 <span style="font-size: 0.8rem; color: #A78BFA; font-weight: 600;">RSA Key Exchanged</span>
             </div>
             
@@ -1195,34 +1274,9 @@
             });
         }
 
-        // 2. Compute Total Vault Volume & Public Key Fingerprint
+        // 2. Initialize Metrics
         async function initMetrics() {
             formatAllDates();
-
-            // Total file volume
-            let totalBytes = 0;
-            {% for f in own_files %}
-                totalBytes += {{ f.file_size }};
-            {% endfor %}
-            {% for f in shared_files %}
-                totalBytes += {{ f.file_size }};
-            {% endfor %}
-
-            if (totalBytes < 1024 * 1024) {
-                document.getElementById('total-volume-val').innerText = (totalBytes / 1024).toFixed(2) + ' KB';
-            } else {
-                document.getElementById('total-volume-val').innerText = (totalBytes / (1024 * 1024)).toFixed(2) + ' MB';
-            }
-
-            // Public Key Fingerprint
-            if (OWNER_PUBLIC_KEY_PEM) {
-                try {
-                    const fp = await getPublicKeyFingerprint(OWNER_PUBLIC_KEY_PEM);
-                    document.getElementById('pub-key-fp').innerText = fp;
-                } catch (e) {
-                    document.getElementById('pub-key-fp').innerText = 'RSA-2048';
-                }
-            }
         }
         window.addEventListener('DOMContentLoaded', initMetrics);
 
@@ -1239,16 +1293,24 @@
             const query = document.getElementById('search-input').value.toLowerCase().trim();
             const ownPanel = document.getElementById('panel-own');
             const sharedPanel = document.getElementById('panel-shared');
+            const outboundPanel = document.getElementById('panel-outbound');
 
             if (currentFilter === 'own') {
                 ownPanel.style.display = 'block';
                 sharedPanel.style.display = 'none';
+                outboundPanel.style.display = 'none';
             } else if (currentFilter === 'shared') {
                 ownPanel.style.display = 'none';
                 sharedPanel.style.display = 'block';
+                outboundPanel.style.display = 'none';
+            } else if (currentFilter === 'outbound') {
+                ownPanel.style.display = 'none';
+                sharedPanel.style.display = 'none';
+                outboundPanel.style.display = 'block';
             } else {
                 ownPanel.style.display = 'block';
                 sharedPanel.style.display = 'block';
+                outboundPanel.style.display = 'block';
             }
 
             document.querySelectorAll('.file-row').forEach(row => {
@@ -1302,9 +1364,8 @@
             document.getElementById(id).style.display = 'none';
         }
 
-        // 4. File Decryption Utility Function (Returns ArrayBuffer & AES Key)
+        // 4. File Decryption Utility Function
         async function fetchAndDecryptFile(fileId) {
-            // 1. Download encrypted AES key
             const keyResponse = await fetch(`/download-key/${fileId}`);
             if (!keyResponse.ok) {
                 const keyErr = await keyResponse.json();
@@ -1312,7 +1373,6 @@
             }
             const keyData = await keyResponse.json();
 
-            // 2. Download encrypted file blob
             const fileResponse = await fetch(`/download-file/${fileId}`);
             if (!fileResponse.ok) {
                 throw new Error('File download failed.');
@@ -1320,7 +1380,6 @@
             const encryptedBlob = await fileResponse.blob();
             const encryptedBuffer = await encryptedBlob.arrayBuffer();
 
-            // 3. Import private key
             const privateKeyPEM = window.sessionStorage.getItem('private_key_pem');
             const lines = privateKeyPEM.split('\n');
             let b64 = '';
@@ -1338,7 +1397,6 @@
                 ["decrypt"]
             );
 
-            // 4. Decrypt AES key & file payload
             const rawAesKey = await decryptAesKeyAsymmetric(keyData.encrypted_aes_key, privateKey);
             const decryptedBuffer = await decryptFileSymmetric(encryptedBuffer, rawAesKey);
 
@@ -1365,7 +1423,6 @@
                 document.getElementById('preview-modal-filename').innerText = filename;
                 document.getElementById('preview-hash-display').innerText = 'SHA-256: ' + sha256Hex.substring(0, 24) + '...';
 
-                // Download button inside modal
                 document.getElementById('preview-download-btn').onclick = () => {
                     triggerDownload(decryptedBuffer, filename);
                 };
@@ -1419,7 +1476,6 @@
             }
         }
 
-        // Helper trigger browser download save
         function triggerDownload(buffer, filename) {
             const blob = new Blob([buffer]);
             const url = window.URL.createObjectURL(blob);
@@ -1482,7 +1538,7 @@
                                 <strong style="color: #C7D2FE; font-size: 0.95rem;">👤 ${user.username}</strong>
                                 <div style="font-size: 0.78rem; color: #64748B;">${user.email}</div>
                             </div>
-                            <button onclick="revokeUserShare(${fileId}, '${user.username}')" style="background: rgba(244, 63, 94, 0.15); color: #F43F5E; border: 1px solid rgba(244, 63, 94, 0.3); padding: 0.4rem 0.85rem; border-radius: 8px; font-weight: 600; font-size: 0.8rem; cursor: pointer;">Revoke Access</button>
+                            <button onclick="revokeUserShare(${fileId}, '${user.username}')" class="btn-revoke">Revoke Access</button>
                         `;
                         listContainer.appendChild(item);
                     });
@@ -1510,6 +1566,7 @@
                 }
                 showSuccess(`Revoked vault access for ${username}`);
                 closeModal('access-modal');
+                setTimeout(() => window.location.reload(), 1000);
             } catch (err) {
                 alert('Revoke failed: ' + err.message);
             }
@@ -1603,6 +1660,7 @@
                 ownLoader.style.display = 'none';
                 form.querySelector('.share-input').value = '';
                 showSuccess(`File access successfully granted to ${recipientUsername}`);
+                setTimeout(() => window.location.reload(), 1000);
 
             } catch (err) {
                 console.error(err);

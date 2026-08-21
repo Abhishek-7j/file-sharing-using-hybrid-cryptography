@@ -4,14 +4,6 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "database.db")
 
-# Remove the database file to start fresh if needed, or simply drop existing tables
-if os.path.exists(DB_PATH):
-    try:
-        os.remove(DB_PATH)
-        print("Existing database.db removed to apply new schema.")
-    except Exception as e:
-        print(f"Could not remove database.db: {e}. Dropping tables instead.")
-
 conn = sqlite3.connect(DB_PATH)
 cursor = conn.cursor()
 
@@ -62,4 +54,4 @@ CREATE TABLE IF NOT EXISTS shares (
 conn.commit()
 conn.close()
 
-print("Database and Schema Created Successfully")
+print("Database and Schema Verified Successfully")
