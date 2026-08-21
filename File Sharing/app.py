@@ -507,6 +507,91 @@ def share():
         conn.close()
         return {"status": "error", "message": str(e)}, 500
 
+@app.route("/file-shares/<int:file_id>")
+def file_shares(file_id):
+    if "username" not in session:
+        return {"status": "error", "message": "Unauthorized"}, 401
+
+    user_id = session["user_id"]
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    is_postgres = not isinstance(conn, sqlite3.Connection)
+
+    query_owner = "SELECT owner_id FROM files WHERE id = %s" if is_postgres else "SELECT owner_id FROM files WHERE id = ?"
+    cursor.execute(query_owner, (file_id,))
+    file_rec = cursor.fetchone()
+    if not file_rec or file_rec["owner_id"] != user_id:
+        cursor.close()
+        conn.close()
+        return {"status": "error", "message": "Access denied"}, 403
+
+    query_shares = """
+    SELECT users.id AS user_id, users.username, users.email 
+    FROM shares 
+    JOIN users ON shares.shared_with_user_id = users.id 
+    WHERE shares.file_id = %s AND shares.shared_with_user_id != %s
+    """ if is_postgres else """
+    SELECT users.id AS user_id, users.username, users.email 
+    FROM shares 
+    JOIN users ON shares.shared_with_user_id = users.id 
+    WHERE shares.file_id = ? AND shares.shared_with_user_id != ?
+    """
+    cursor.execute(query_shares, (file_id, user_id))
+    shares = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    result = [{"user_id": row["user_id"], "username": row["username"], "email": row["email"]} for row in shares]
+    return {"status": "success", "shares": result}
+
+@app.route("/revoke-share", methods=["POST"])
+def revoke_share():
+    if "username" not in session:
+        return {"status": "error", "message": "Unauthorized"}, 401
+
+    data = request.get_json()
+    if not data:
+        return {"status": "error", "message": "Missing JSON data"}, 400
+
+    file_id = data.get("file_id")
+    target_username = data.get("username", "").strip()
+
+    if not file_id or not target_username:
+        return {"status": "error", "message": "Missing file ID or username"}, 400
+
+    user_id = session["user_id"]
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    is_postgres = not isinstance(conn, sqlite3.Connection)
+
+    query_owner = "SELECT owner_id FROM files WHERE id = %s" if is_postgres else "SELECT owner_id FROM files WHERE id = ?"
+    cursor.execute(query_owner, (file_id,))
+    file_rec = cursor.fetchone()
+    if not file_rec or file_rec["owner_id"] != user_id:
+        cursor.close()
+        conn.close()
+        return {"status": "error", "message": "Access denied"}, 403
+
+    query_target = "SELECT id FROM users WHERE username = %s" if is_postgres else "SELECT id FROM users WHERE username = ?"
+    cursor.execute(query_target, (target_username,))
+    target_user = cursor.fetchone()
+    if not target_user:
+        cursor.close()
+        conn.close()
+        return {"status": "error", "message": "Target user not found"}, 404
+
+    query_delete = """
+    DELETE FROM shares WHERE file_id = %s AND shared_with_user_id = %s AND shared_by_user_id = %s
+    """ if is_postgres else """
+    DELETE FROM shares WHERE file_id = ? AND shared_with_user_id = ? AND shared_by_user_id = ?
+    """
+    cursor.execute(query_delete, (file_id, target_user["id"], user_id))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return {"status": "success", "message": f"Access for {target_username} revoked successfully"}
+
 @app.route("/get-recovery-challenge")
 def get_recovery_challenge():
     username = request.args.get("username", "").strip()

@@ -215,3 +215,18 @@ async function decryptAesKeyAsymmetric(encryptedAesKeyB64, rsaPrivateKey) {
         encryptedBuffer
     );
 }
+
+// 11. Compute SHA-256 Hex Hash of an ArrayBuffer
+async function computeSHA256Hex(buffer) {
+    const hashBuffer = await window.crypto.subtle.digest("SHA-256", buffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// 12. Compute SHA-256 Fingerprint of a PEM String
+async function getPublicKeyFingerprint(pem) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(pem.trim());
+    const hashHex = await computeSHA256Hex(data.buffer);
+    return hashHex.substring(0, 16).toUpperCase().match(/.{1,4}/g).join(':');
+}

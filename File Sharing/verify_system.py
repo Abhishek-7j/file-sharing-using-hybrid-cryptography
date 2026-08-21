@@ -246,6 +246,12 @@ res_share = client.post("/share", json={
 assert res_share.status_code == 200
 print("OK - File shared with Bob successfully!")
 
+# Test 6.5: Verify file shares & revocation API
+res_file_shares = client.get(f"/file-shares/{file_record['id']}")
+assert res_file_shares.status_code == 200
+assert res_file_shares.get_json()["shares"][0]["username"] == "bob"
+print("OK - File shares list verified!")
+
 
 # Test 7: Bob download and decrypt
 client.get("/logout")
@@ -268,6 +274,42 @@ bob_dec_aes_key = client_rsa_decrypt_key(base64.b64decode(bob_enc_key_b64), bob_
 bob_dec_file_content = client_decrypt_file(res_bob_file.data, bob_dec_aes_key)
 assert bob_dec_file_content == file_content
 print("OK - Bob downloaded and decrypted the shared file successfully!")
+
+
+# Test 7.5: Revoke Access Test
+client.get("/logout")
+client.post("/login", json={
+    "email": "alice@test.com",
+    "password": "alicepassword"
+})
+res_revoke = client.post("/revoke-share", json={
+    "file_id": file_record["id"],
+    "username": "bob"
+})
+assert res_revoke.status_code == 200
+print("OK - Alice revoked Bob's share access!")
+
+# Verify Bob can no longer download
+client.get("/logout")
+client.post("/login", json={
+    "email": "bob@test.com",
+    "password": "bobpassword"
+})
+res_bob_revoked = client.get(f"/download-key/{file_record['id']}")
+assert res_bob_revoked.status_code == 403
+print("OK - Access revocation enforced for Bob!")
+
+# Re-share for remaining tests
+client.get("/logout")
+client.post("/login", json={
+    "email": "alice@test.com",
+    "password": "alicepassword"
+})
+client.post("/share", json={
+    "file_id": file_record["id"],
+    "share_with": "bob",
+    "encrypted_aes_key": base64.b64encode(bob_encrypted_aes_key).decode()
+})
 
 
 # Test 8: Username checking API
