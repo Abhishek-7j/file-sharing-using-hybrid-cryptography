@@ -3,17 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShieldShare - Admin Database Console</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>ShieldShare Admin - User Management Console</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #080B11;
-            --panel-bg: rgba(17, 24, 39, 0.75);
-            --primary: #4F46E5;
-            --secondary: #7C3AED;
-            --text-main: #F3F4F6;
-            --text-muted: #9CA3AF;
-            --border-color: rgba(255, 255, 255, 0.08);
+            --bg-color: #080B10;
+            --panel-bg: rgba(18, 22, 31, 0.85);
+            --panel-border: rgba(255, 255, 255, 0.12);
+            --text-main: #FFFFFF;
+            --text-muted: #94A3B8;
         }
 
         * {
@@ -24,75 +22,118 @@
         }
 
         body {
-            background: radial-gradient(circle at top right, #1E1B4B 0%, var(--bg-color) 60%);
+            background: radial-gradient(circle at 50% 10%, #1E293B 0%, var(--bg-color) 70%);
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            padding: 2rem;
         }
 
-        .header {
+        header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2.5rem;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 1.5rem;
+            padding: 1.25rem 2.5rem;
+            background: rgba(11, 15, 22, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--panel-border);
         }
 
-        .header h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #C7D2FE 0%, #818CF8 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .logo-group {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #FFFFFF;
             letter-spacing: -0.5px;
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2.5rem;
-        }
-
-        .stat-card {
-            background: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 1.5rem;
-            backdrop-filter: blur(12px);
-        }
-
-        .stat-card .label {
-            color: var(--text-muted);
-            font-size: 0.85rem;
+        .admin-badge {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #FFFFFF;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 0.5rem;
         }
 
-        .stat-card .value {
-            font-size: 2rem;
+        .container {
+            max-width: 1320px;
+            width: 100%;
+            margin: 2.5rem auto;
+            padding: 0 1.75rem;
+            flex: 1;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 18px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+        }
+
+        .metric-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .metric-val {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #FFFFFF;
+        }
+
+        .metric-lbl {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
             font-weight: 700;
-            color: #C7D2FE;
+            letter-spacing: 0.5px;
         }
 
         .panel {
             background: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
+            border: 1px solid var(--panel-border);
+            border-radius: 22px;
             padding: 2rem;
             backdrop-filter: blur(16px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
         }
 
         .panel-title {
             font-size: 1.25rem;
-            font-weight: 600;
+            font-weight: 700;
             margin-bottom: 1.5rem;
-            color: var(--text-main);
+            color: #FFFFFF;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .table-container {
@@ -106,109 +147,137 @@
         }
 
         th {
-            padding: 1rem;
-            color: var(--text-muted);
-            font-weight: 600;
-            font-size: 0.85rem;
+            padding: 1rem 1.1rem;
+            color: #94A3B8;
+            font-weight: 700;
+            font-size: 0.78rem;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 1px solid var(--border-color);
+            letter-spacing: 0.6px;
+            border-bottom: 1px solid var(--panel-border);
+            background: rgba(15, 23, 42, 0.5);
         }
 
         td {
-            padding: 1.25rem 1rem;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 0.95rem;
+            padding: 1.1rem;
+            border-bottom: 1px solid var(--panel-border);
+            font-size: 0.92rem;
             vertical-align: middle;
         }
 
         tr:hover td {
-            background: rgba(255, 255, 255, 0.02);
+            background: rgba(255, 255, 255, 0.03);
         }
 
-        .mono {
-            font-family: monospace;
-            font-size: 0.8rem;
-            color: #A78BFA;
-            background: rgba(124, 58, 237, 0.1);
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            max-width: 180px;
-            display: inline-block;
+        .user-id {
+            font-family: 'JetBrains Mono', monospace;
+            color: #94A3B8;
+            font-weight: 600;
+        }
+
+        .user-name {
+            color: #FFFFFF;
+            font-weight: 700;
+        }
+
+        .key-snippet {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: #CBD5E1;
+            background: rgba(15, 23, 42, 0.7);
+            padding: 0.35rem 0.65rem;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 280px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-        }
-
-        .btn-back {
-            padding: 0.6rem 1.2rem;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            color: var(--text-main);
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 0.9rem;
-            transition: background 0.2s;
-        }
-
-        .btn-back:hover {
-            background: rgba(255, 255, 255, 0.1);
         }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div>
-            <h1>ShieldShare Database Console</h1>
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Secure administrative view of user records</p>
+    <header>
+        <div class="logo-group">
+            <div class="logo">ShieldShare</div>
+            <span class="admin-badge">Database Admin Console</span>
         </div>
-        <a href="/login" class="btn-back">Go to App Login</a>
-    </div>
+        <a href="/dashboard" style="color: #FFFFFF; text-decoration: none; font-size: 0.9rem; font-weight: 600;">← Back to Dashboard</a>
+    </header>
 
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="label">Total Registered Vaults</div>
-            <div class="value">{{ users|length }}</div>
-        </div>
-        <div class="stat-card">
-            <div class="label">Total Uploaded Files</div>
-            <div class="value">{{ files_count }}</div>
-        </div>
-        <div class="stat-card">
-            <div class="label">System Mode</div>
-            <div class="value" style="color: #10B981;">PRODUCTION</div>
-        </div>
-    </div>
-
-    <div class="panel">
-        <div class="panel-title">Registered User Records</div>
+    <div class="container">
         
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Username</th>
-                        <th>Email Address</th>
-                        <th>RSA Public Key (PEM)</th>
-                        <th>PBKDF2 Salt</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user in users %}
-                    <tr>
-                        <td>{{ user.id }}</td>
-                        <td><strong style="color: #C7D2FE;">{{ user.username }}</strong></td>
-                        <td>{{ user.email }}</td>
-                        <td><span class="mono" title="{{ user.public_key }}">{{ user.public_key }}</span></td>
-                        <td><span class="mono" title="{{ user.private_key_salt }}">{{ user.private_key_salt }}</span></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon">👥</div>
+                <div>
+                    <div class="metric-val">{{ users|length }}</div>
+                    <div class="metric-lbl">Registered Vault Users</div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">📦</div>
+                <div>
+                    <div class="metric-val">{{ files_count }}</div>
+                    <div class="metric-lbl">Encrypted Files Stored</div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">🔒</div>
+                <div>
+                    <div class="metric-val">Zero-Knowledge</div>
+                    <div class="metric-lbl">Server Storage Mode</div>
+                </div>
+            </div>
         </div>
+
+        <div class="panel">
+            <div class="panel-title">
+                <span>User Directory & Cryptographic Credentials</span>
+                <span style="font-size: 0.8rem; color: #94A3B8; font-weight: 500;">Live SQL Database View</span>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Username</th>
+                            <th>Email Address</th>
+                            <th>RSA Public Key Fingerprint</th>
+                            <th>Private Key Salt</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if users %}
+                            {% for user in users %}
+                            <tr>
+                                <td class="user-id">#{{ user.id if user.id else user[0] }}</td>
+                                <td class="user-name">{{ user.username if user.username else user[1] }}</td>
+                                <td style="color: #94A3B8;">{{ user.email if user.email else user[2] }}</td>
+                                <td>
+                                    <div class="key-snippet" title="{{ user.public_key if user.public_key else user[3] }}">
+                                        {{ (user.public_key if user.public_key else user[3])[:45] }}...
+                                    </div>
+                                </td>
+                                <td>
+                                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: #CBD5E1;">
+                                        {{ user.private_key_salt if user.private_key_salt else user[4] }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No registered users found in the database.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 
 </body>

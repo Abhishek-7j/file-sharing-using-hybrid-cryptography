@@ -4,18 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ShieldShare - Restore Vault</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #080B10;
-            --card-bg: rgba(13, 17, 28, 0.7);
-            --primary: #4F46E5;
-            --primary-hover: #4338CA;
-            --secondary: #7C3AED;
-            --text-main: #F3F4F6;
-            --text-muted: #9CA3AF;
-            --border-color: rgba(255, 255, 255, 0.06);
-            --glow-color: rgba(124, 58, 237, 0.35);
+            --bg-color: #090C10;
+            --card-bg: rgba(18, 22, 31, 0.85);
+            --primary: #FFFFFF;
+            --primary-hover: #E2E8F0;
+            --text-main: #FFFFFF;
+            --text-muted: #94A3B8;
+            --border-color: rgba(255, 255, 255, 0.12);
+            --glow-color: rgba(255, 255, 255, 0.15);
         }
 
         * {
@@ -26,74 +25,44 @@
         }
 
         body {
-            background: radial-gradient(circle at 50% 50%, #1E1B4B 0%, var(--bg-color) 100%);
+            background: radial-gradient(circle at 50% 30%, #1E293B 0%, var(--bg-color) 80%);
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
+            padding: 2rem 1rem;
             position: relative;
         }
 
-        /* Abstract dynamic grid overlay */
         body::before {
             content: '';
             position: absolute;
             width: 100%;
             height: 100%;
-            background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-            background-size: 40px 40px;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
             top: 0; left: 0;
             z-index: 0;
-        }
-
-        .shape {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(120px);
-            z-index: 1;
-            opacity: 0.35;
-            animation: float 10s ease-in-out infinite alternate;
-        }
-        .shape-1 {
-            width: 500px;
-            height: 500px;
-            background: var(--primary);
-            top: -150px;
-            left: -150px;
-        }
-        .shape-2 {
-            width: 400px;
-            height: 400px;
-            background: var(--secondary);
-            bottom: -100px;
-            right: -100px;
-            animation-delay: -5s;
-        }
-
-        @keyframes float {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(40px, 30px) scale(1.15); }
         }
 
         .auth-container {
             position: relative;
             z-index: 10;
             width: 100%;
-            max-width: 440px;
+            max-width: 480px;
             padding: 3rem 2.5rem;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 28px;
-            backdrop-filter: blur(24px);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            border-radius: 24px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7);
             animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(24px); }
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
@@ -103,18 +72,16 @@
         }
 
         .header h1 {
-            font-size: 2.4rem;
+            font-size: 2.3rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 30%, #818CF8 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 0.5rem;
+            color: #FFFFFF;
             letter-spacing: -1px;
+            margin-bottom: 0.4rem;
         }
 
         .header p {
             color: var(--text-muted);
-            font-size: 0.95rem;
+            font-size: 0.92rem;
             font-weight: 400;
         }
 
@@ -126,66 +93,70 @@
         .form-group label {
             display: block;
             margin-bottom: 0.5rem;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #C7D2FE;
-            letter-spacing: 0.5px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #E2E8F0;
+            letter-spacing: 0.8px;
             text-transform: uppercase;
         }
 
         .form-group input {
             width: 100%;
             padding: 0.9rem 1.1rem;
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 14px;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
             color: var(--text-main);
             font-size: 0.95rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.25s ease;
             outline: none;
         }
 
+        .form-group input.recovery-key-input {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
         .form-group input::placeholder {
-            color: #4B5563;
+            color: #64748B;
         }
 
         .form-group input:focus {
-            border-color: var(--secondary);
-            box-shadow: 0 0 0 4px var(--glow-color);
-            background: rgba(15, 23, 42, 0.85);
+            border-color: #FFFFFF;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+            background: rgba(15, 23, 42, 0.9);
         }
 
         .btn-submit {
             width: 100%;
-            padding: 1rem;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 0.95rem;
+            background: linear-gradient(135deg, #FFFFFF 0%, #E2E8F0 100%);
             border: none;
-            border-radius: 14px;
-            color: white;
-            font-weight: 700;
-            font-size: 1rem;
+            border-radius: 12px;
+            color: #090C10;
+            font-weight: 800;
+            font-size: 0.98rem;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.3);
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
             margin-top: 0.75rem;
         }
 
         .btn-submit:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.5);
-        }
-
-        .btn-submit:active {
-            transform: translateY(0);
+            background: #FFFFFF;
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.25);
         }
 
         .error-message {
-            background: rgba(239, 68, 68, 0.12);
-            border: 1px solid rgba(239, 68, 68, 0.25);
-            color: #FCA5A5;
+            background: rgba(244, 63, 94, 0.12);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            color: #FECDD3;
             padding: 0.85rem 1.1rem;
-            border-radius: 14px;
-            font-size: 0.9rem;
+            border-radius: 12px;
+            font-size: 0.88rem;
             font-weight: 500;
             margin-bottom: 1.5rem;
             text-align: center;
@@ -197,41 +168,39 @@
             margin-top: 1.75rem;
             font-size: 0.9rem;
             color: var(--text-muted);
-            line-height: 1.6;
         }
 
         .footer-link a {
-            color: #818CF8;
+            color: #FFFFFF;
             text-decoration: none;
             font-weight: 600;
-            transition: color 0.2s ease;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.4);
         }
 
         .footer-link a:hover {
-            color: #A5B4FC;
-            text-decoration: underline;
+            border-bottom-color: #FFFFFF;
         }
 
         .overlay-loader {
             display: none;
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(8, 11, 16, 0.9);
+            background: rgba(9, 12, 16, 0.92);
             z-index: 100;
-            border-radius: 28px;
+            border-radius: 24px;
             align-items: center;
             justify-content: center;
             flex-direction: column;
             color: white;
             font-weight: 600;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             backdrop-filter: blur(4px);
         }
 
         .spinner {
-            width: 44px; height: 44px;
-            border: 4px solid rgba(255,255,255,0.05);
-            border-top: 4px solid var(--secondary);
+            width: 42px; height: 42px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid #FFFFFF;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin-bottom: 1.25rem;
@@ -245,18 +214,15 @@
     <script src="/static/js/crypto-helper.js"></script>
 </head>
 <body>
-    <div class="shape shape-1"></div>
-    <div class="shape shape-2"></div>
-
     <div class="auth-container">
         <div class="overlay-loader" id="loader">
             <div class="spinner"></div>
-            <div id="loader-text">Decrypting vault private key...</div>
+            <div id="loader-text">Decrypting recovery payload...</div>
         </div>
 
         <div class="header">
             <h1>ShieldShare</h1>
-            <p>Restore cryptographic vault access</p>
+            <p>Restore your cryptographic vault</p>
         </div>
 
         <div class="error-message" id="error-box"></div>
@@ -269,12 +235,12 @@
 
             <div class="form-group">
                 <label for="username">Username</label>
-                <input type="text" id="username" name="username" placeholder="Enter username" required autocomplete="username">
+                <input type="text" id="username" name="username" placeholder="Enter your username" required autocomplete="username">
             </div>
 
             <div class="form-group">
-                <label for="recovery_key">Recovery Key</label>
-                <input type="text" id="recovery_key" name="recovery_key" placeholder="XXXX-XXXX-XXXX-XXXX" required>
+                <label for="recovery_key">16-Character Recovery Key</label>
+                <input type="text" id="recovery_key" name="recovery_key" class="recovery-key-input" placeholder="XXXX-XXXX-XXXX-XXXX" required maxlength="19">
             </div>
 
             <div class="form-group">
@@ -282,11 +248,11 @@
                 <input type="password" id="new_password" name="new_password" placeholder="••••••••" required autocomplete="new-password">
             </div>
 
-            <button type="submit" class="btn-submit">Restore & Reset Password</button>
+            <button type="submit" class="btn-submit">Restore Vault & Reset Password</button>
         </form>
 
         <div class="footer-link">
-            Remembered password? <a href="/login">Unlock Vault</a>
+            Remembered your password? <a href="/login">Unlock Vault</a>
         </div>
     </div>
 
@@ -296,100 +262,76 @@
         const loaderText = document.getElementById('loader-text');
         const errorBox = document.getElementById('error-box');
 
-        // Helper to convert array buffer to string
-        function bufferToString(buf) {
-            return new TextDecoder().decode(buf);
-        }
-
         recoverForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             errorBox.style.display = 'none';
             loader.style.display = 'flex';
-            loaderText.innerText = 'Fetching challenge...';
 
             const email = document.getElementById('email').value.trim();
             const username = document.getElementById('username').value.trim();
-            const recoveryKey = document.getElementById('recovery_key').value.trim().toUpperCase();
+            const recoveryKey = document.getElementById('recovery_key').value.replace(/-/g, '').trim().toUpperCase();
             const newPassword = document.getElementById('new_password').value;
 
             try {
-                // 1. Get recovery challenge (encrypted with public key)
-                const challengeResponse = await fetch(`/get-recovery-challenge?username=${encodeURIComponent(username)}`);
-                if (!challengeResponse.ok) {
-                    const challengeErr = await challengeResponse.json();
-                    throw new Error(challengeErr.message || 'Failed to get challenge.');
+                loaderText.innerText = 'Retrieving recovery payload...';
+                const payloadRes = await fetch(`/get-recovery-payload?username=${encodeURIComponent(username)}&email=${encodeURIComponent(email)}`);
+                if (!payloadRes.ok) {
+                    const errJson = await payloadRes.json();
+                    throw new Error(errJson.message || 'User not found.');
                 }
-                const challengeData = await challengeResponse.json();
-                const encryptedChallengeB64 = challengeData.encrypted_challenge;
+                const recoveryPayload = await payloadRes.json();
 
-                loaderText.innerText = 'Retrieving encrypted vault metadata...';
-                
-                // 2. Fetch recovery payload (encrypted key + salt) with both username & email
-                const payloadResponse = await fetch(`/get-recovery-payload?username=${encodeURIComponent(username)}&email=${encodeURIComponent(email)}`);
-                if (!payloadResponse.ok) {
-                    const errorData = await payloadResponse.json();
-                    throw new Error(errorData.message || 'User vault not found.');
+                loaderText.innerText = 'Decrypting RSA private key with recovery key...';
+                const recoverySalt = stringToBuffer('SHIELDSHARE_RECOVERY_SALT');
+                const recoveryDerivedKey = await deriveKeyFromPassword(recoveryKey, recoverySalt);
+
+                const decryptedPrivateKey = await decryptPrivateKey(recoveryPayload.recovery_private_key, recoveryDerivedKey);
+
+                loaderText.innerText = 'Requesting server verification challenge...';
+                const challengeRes = await fetch(`/get-recovery-challenge?username=${encodeURIComponent(username)}`);
+                if (!challengeRes.ok) {
+                    throw new Error('Failed to retrieve verification challenge.');
                 }
-                const payloadData = await payloadResponse.json();
-
-                loaderText.innerText = 'Deriving recovery key...';
-
-                // 3. Derive key from Recovery Key + salt
-                const saltBuffer = base64ToArrayBuffer(payloadData.private_key_salt);
-                const recoveryDerivedKey = await deriveKeyFromPassword(recoveryKey, saltBuffer);
-
-                loaderText.innerText = 'Decrypting vault private key...';
-
-                // 4. Decrypt private key with recovery key
-                let privateKey;
-                try {
-                    privateKey = await decryptPrivateKey(payloadData.recovery_private_key, recoveryDerivedKey);
-                } catch (decErr) {
-                    throw new Error('Invalid Recovery Key. Decryption failed.');
-                }
+                const challengeData = await challengeRes.json();
 
                 loaderText.innerText = 'Decrypting server challenge...';
-
-                // 5. Decrypt challenge using decrypted private key (Proof of Possession)
-                const encryptedChallengeBuffer = base64ToArrayBuffer(encryptedChallengeB64);
                 const decryptedChallengeBuffer = await window.crypto.subtle.decrypt(
                     { name: "RSA-OAEP" },
-                    privateKey,
-                    encryptedChallengeBuffer
+                    decryptedPrivateKey,
+                    base64ToArrayBuffer(challengeData.encrypted_challenge)
                 );
                 const decryptedChallenge = bufferToString(decryptedChallengeBuffer);
 
-                loaderText.innerText = 'Encrypting private key with new password...';
+                loaderText.innerText = 'Re-encrypting RSA private key with new password...';
+                const newSaltBytes = window.crypto.getRandomValues(new Uint8Array(16));
+                const newSaltB64 = arrayBufferToBase64(newSaltBytes.buffer);
+                const newPasswordDerivedKey = await deriveKeyFromPassword(newPassword, newSaltBytes.buffer);
+                const newEncryptedPrivateKeyB64 = await encryptPrivateKey(decryptedPrivateKey, newPasswordDerivedKey);
 
-                // 6. Re-encrypt private key with new password-derived key
-                const newPasswordDerivedKey = await deriveKeyFromPassword(newPassword, saltBuffer);
-                const newEncryptedPrivateKey = await encryptPrivateKey(privateKey, newPasswordDerivedKey);
-
-                loaderText.innerText = 'Uploading new credentials...';
-
-                // 7. Submit recovery request
-                const recoverResponse = await fetch('/recover', {
+                loaderText.innerText = 'Submitting password reset...';
+                const resetRes = await fetch('/recover', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         username: username,
                         decrypted_challenge: decryptedChallenge,
-                        new_encrypted_private_key: newEncryptedPrivateKey,
+                        new_encrypted_private_key: newEncryptedPrivateKeyB64,
+                        new_private_key_salt: newSaltB64,
                         new_password: newPassword
                     })
                 });
 
-                const recoverData = await recoverResponse.json();
-                if (!recoverResponse.ok || recoverData.status !== 'success') {
-                    throw new Error(recoverData.message || 'Vault restoration failed.');
+                const resetData = await resetRes.json();
+                if (!resetRes.ok || resetData.status !== 'success') {
+                    throw new Error(resetData.message || 'Vault restoration failed.');
                 }
 
-                alert('Vault restored successfully! Please log in with your new password.');
+                alert('Vault successfully restored! You can now log in with your new password.');
                 window.location.href = '/login';
 
             } catch (err) {
                 console.error(err);
-                errorBox.innerText = err.message;
+                errorBox.innerText = 'Restoration failed: ' + err.message;
                 errorBox.style.display = 'block';
                 loader.style.display = 'none';
             }
