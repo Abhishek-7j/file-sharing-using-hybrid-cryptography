@@ -91,7 +91,7 @@
         .user-menu {
             display: flex;
             align-items: center;
-            gap: 1.25rem;
+            gap: 1rem;
         }
 
         .user-badge {
@@ -102,6 +102,27 @@
             border-radius: 30px;
             font-size: 0.88rem;
             font-weight: 600;
+        }
+
+        .btn-sandbox-nav {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #FFFFFF;
+            padding: 0.45rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-sandbox-nav:hover {
+            background: #FFFFFF;
+            color: #090C10;
+            transform: translateY(-1px);
         }
 
         .btn-logout {
@@ -223,7 +244,7 @@
             display: none;
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(9, 12, 16, 0.92);
+            background: rgba(9, 12, 16, 0.95);
             z-index: 100;
             border-radius: 22px;
             align-items: center;
@@ -232,21 +253,40 @@
             color: white;
             font-weight: 600;
             font-size: 1.05rem;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(6px);
+            padding: 1.5rem;
         }
 
         .spinner {
-            width: 42px; height: 42px;
+            width: 36px; height: 36px;
             border: 3px solid rgba(255,255,255,0.1);
             border-top: 3px solid #FFFFFF;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-bottom: 1.2rem;
+            margin-bottom: 0.85rem;
         }
 
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        /* Live Terminal Execution Console */
+        .terminal-log-box {
+            width: 100%;
+            max-width: 650px;
+            height: 140px;
+            background: #05070B;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            color: #38BDF8;
+            overflow-y: auto;
+            margin-top: 1rem;
+            text-align: left;
+            white-space: pre-wrap;
         }
 
         .panel-title {
@@ -570,6 +610,17 @@
             transform: translateY(-1px);
         }
 
+        .btn-inspect {
+            background: rgba(56, 189, 248, 0.12);
+            color: #38BDF8;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+
+        .btn-inspect:hover {
+            background: rgba(56, 189, 248, 0.25);
+            transform: translateY(-1px);
+        }
+
         .btn-verify {
             background: rgba(226, 232, 240, 0.12);
             color: #E2E8F0;
@@ -640,7 +691,7 @@
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(5, 8, 12, 0.9);
+            background: rgba(5, 8, 12, 0.92);
             z-index: 1000;
             align-items: center;
             justify-content: center;
@@ -653,7 +704,7 @@
             background: #0F172A;
             border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 24px;
-            max-width: 780px;
+            max-width: 820px;
             width: 100%;
             max-height: 90vh;
             display: flex;
@@ -787,6 +838,21 @@
             justify-content: flex-end;
             gap: 1rem;
         }
+
+        /* Ciphertext Hex Viewer styling */
+        .hex-viewer-box {
+            background: #05070B;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: #38BDF8;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 220px;
+            overflow-y: auto;
+        }
     </style>
     <script src="/static/js/crypto-helper.js"></script>
     <script>
@@ -807,6 +873,7 @@
             </span>
         </div>
         <div class="user-menu">
+            <button class="btn-sandbox-nav" onclick="openModal('sandbox-modal')">🔬 Live Crypto Sandbox</button>
             <span class="user-badge">🔑 Vault: {{ username }}</span>
             <a href="/logout" class="btn-logout">
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
@@ -864,7 +931,8 @@
         <div class="panel">
             <div class="overlay-loader" id="upload-loader">
                 <div class="spinner"></div>
-                <div id="upload-loader-text">Encrypting file...</div>
+                <div id="upload-loader-text" style="font-weight: 700; color: #FFFFFF;">Live Cryptographic Encryption Console...</div>
+                <div class="terminal-log-box" id="upload-terminal"></div>
             </div>
 
             <div class="panel-title">
@@ -967,6 +1035,7 @@
                                 <td>
                                     <div class="action-group">
                                         <button onclick="viewAndPreview({{ file.id }}, '{{ file.filename }}')" class="btn-action btn-preview" title="Decrypt in memory and preview inline">👁️ Preview</button>
+                                        <button onclick="inspectRawCiphertextModal({{ file.id }}, '{{ file.filename }}')" class="btn-action btn-inspect" title="Inspect Raw Encrypted Hex Data Stored on Server Disk">🔬 Inspect</button>
                                         <button onclick="verifyIntegrityModal({{ file.id }}, '{{ file.filename }}', {{ file.file_size }})" class="btn-action btn-verify" title="Cryptographic Integrity Audit">🛡️ Verify</button>
                                         <button onclick="downloadAndDecrypt({{ file.id }}, '{{ file.filename }}')" class="btn-action btn-download" title="Decrypt and download file">📥 Download</button>
                                     </div>
@@ -1093,6 +1162,7 @@
                                 <td>
                                     <div class="action-group">
                                         <button onclick="viewAndPreview({{ file.id }}, '{{ file.filename }}')" class="btn-action btn-preview">👁️ Preview</button>
+                                        <button onclick="inspectRawCiphertextModal({{ file.id }}, '{{ file.filename }}')" class="btn-action btn-inspect">🔬 Inspect</button>
                                         <button onclick="verifyIntegrityModal({{ file.id }}, '{{ file.filename }}', {{ file.file_size }})" class="btn-action btn-verify">🛡️ Verify</button>
                                         <button onclick="downloadAndDecrypt({{ file.id }}, '{{ file.filename }}')" class="btn-action btn-download">📥 Download</button>
                                     </div>
@@ -1207,6 +1277,97 @@
             </div>
             <div class="modal-footer">
                 <button class="btn-action btn-grants" onclick="closeModal('access-modal')">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 4: Raw Ciphertext Inspector (Zero-Knowledge Disk Storage Proof) -->
+    <div class="modal-overlay" id="inspect-modal">
+        <div class="modal-box" style="max-width: 750px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span>🔬 Raw Ciphertext Disk Inspector:</span>
+                    <span id="inspect-modal-filename" style="color: #38BDF8;"></span>
+                </div>
+                <button class="btn-close-modal" onclick="closeModal('inspect-modal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div style="background: rgba(255, 255, 255, 0.05); padding: 0.85rem 1.1rem; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.15); font-size: 0.85rem; color: #E2E8F0;">
+                    <strong>Zero-Knowledge Disk Storage Proof:</strong> This window displays the exact raw scrambled binary bytes stored on the cloud server disk. Notice that without your private RSA key, the payload is completely unreadable hexadecimal ciphertext.
+                </div>
+
+                <div>
+                    <div style="font-size: 0.8rem; font-weight: 700; color: #94A3B8; text-transform: uppercase; margin-bottom: 0.4rem;">
+                        1. Raw Encrypted Payload (Hexadecimal Stream - First 256 Bytes)
+                    </div>
+                    <div class="hex-viewer-box" id="inspect-hex-display">Loading hex dump...</div>
+                </div>
+
+                <div>
+                    <div style="font-size: 0.8rem; font-weight: 700; color: #94A3B8; text-transform: uppercase; margin-bottom: 0.4rem;">
+                        2. RSA-2048 Encrypted AES Key Blob (Stored in DB)
+                    </div>
+                    <div class="hex-viewer-box" id="inspect-key-display" style="max-height: 100px; color: #E2E8F0;">Loading key blob...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-action btn-grants" onclick="closeModal('inspect-modal')">Close Inspection</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 5: Interactive Live Encryption Visualizer & Sandbox -->
+    <div class="modal-overlay" id="sandbox-modal">
+        <div class="modal-box" style="max-width: 850px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span>🔬 Interactive Live Cryptography Sandbox & Visualizer</span>
+                </div>
+                <button class="btn-close-modal" onclick="closeModal('sandbox-modal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div style="font-size: 0.88rem; color: #94A3B8;">
+                    Test how ShieldShare encrypts text or file data live in your browser memory before sending it over the network.
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <label style="font-size: 0.8rem; font-weight: 700; color: #E2E8F0; text-transform: uppercase;">
+                        Sample Plaintext Data to Encrypt
+                    </label>
+                    <textarea id="sandbox-input-text" style="width: 100%; height: 80px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; color: #FFFFFF; padding: 0.85rem; font-family: 'JetBrains Mono', monospace; font-size: 0.88rem; outline: none;" placeholder="Type any secret text here to test encryption live..."></textarea>
+                </div>
+
+                <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+                    <button onclick="runSandboxStep(1)" class="btn-action btn-preview">1. Key Generation (AES + RSA)</button>
+                    <button onclick="runSandboxStep(2)" class="btn-action btn-verify">2. AES-256-GCM Encrypt</button>
+                    <button onclick="runSandboxStep(3)" class="btn-action btn-inspect">3. RSA Key Exchange</button>
+                    <button onclick="runSandboxStep(4)" class="btn-action btn-download">4. Decrypt & Integrity Check</button>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <div style="font-size: 0.78rem; font-weight: 700; color: #94A3B8; text-transform: uppercase; margin-bottom: 0.4rem;">
+                            Original Plaintext (Client-Side Memory)
+                        </div>
+                        <div class="hex-viewer-box" id="sandbox-plaintext-box" style="height: 160px; color: #FFFFFF;">Input text above to run encryption visualizer...</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.78rem; font-weight: 700; color: #38BDF8; text-transform: uppercase; margin-bottom: 0.4rem;">
+                            Server Disk Storage View (Scrambled Ciphertext Hex)
+                        </div>
+                        <div class="hex-viewer-box" id="sandbox-ciphertext-box" style="height: 160px;">Ciphertext stream will appear here...</div>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size: 0.78rem; font-weight: 700; color: #E2E8F0; text-transform: uppercase; margin-bottom: 0.4rem;">
+                        Live Execution Logs & Digest Report
+                    </div>
+                    <div class="hex-viewer-box" id="sandbox-log-box" style="height: 100px; color: #94A3B8;">Click step buttons above to execute live WebCrypto operations...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-action btn-grants" onclick="closeModal('sandbox-modal')">Close Sandbox</button>
             </div>
         </div>
     </div>
@@ -1382,7 +1543,7 @@
             const rawAesKey = await decryptAesKeyAsymmetric(keyData.encrypted_aes_key, privateKey);
             const decryptedBuffer = await decryptFileSymmetric(encryptedBuffer, rawAesKey);
 
-            return { decryptedBuffer, encryptedBuffer };
+            return { decryptedBuffer, encryptedBuffer, keyData };
         }
 
         async function viewAndPreview(fileId, filename) {
@@ -1454,6 +1615,88 @@
                 ownLoader.style.display = 'none';
                 sharedLoader.style.display = 'none';
                 showError('Preview failed: ' + err.message);
+            }
+        }
+
+        // Raw Ciphertext Inspector (Zero-Knowledge Proof)
+        async function inspectRawCiphertextModal(fileId, filename) {
+            const ownLoader = document.getElementById('own-loader');
+            const sharedLoader = document.getElementById('shared-loader');
+            ownLoader.style.display = 'flex';
+            sharedLoader.style.display = 'flex';
+            document.getElementById('own-loader-text').innerText = 'Downloading raw encrypted stream...';
+            document.getElementById('shared-loader-text').innerText = 'Downloading raw encrypted stream...';
+
+            try {
+                const { encryptedBuffer, keyData } = await fetchAndDecryptFile(fileId);
+                const hexDump = arrayBufferToHex(encryptedBuffer.slice(0, 256));
+
+                document.getElementById('inspect-modal-filename').innerText = filename;
+                document.getElementById('inspect-hex-display').innerText = '0x' + hexDump.match(/.{1,2}/g).join(' ');
+                document.getElementById('inspect-key-display').innerText = keyData.encrypted_aes_key;
+
+                ownLoader.style.display = 'none';
+                sharedLoader.style.display = 'none';
+                openModal('inspect-modal');
+
+            } catch (err) {
+                console.error(err);
+                ownLoader.style.display = 'none';
+                sharedLoader.style.display = 'none';
+                showError('Ciphertext inspection failed: ' + err.message);
+            }
+        }
+
+        // Live Cryptography Sandbox Logic
+        let sandboxState = {};
+        async function runSandboxStep(step) {
+            const inputText = document.getElementById('sandbox-input-text').value.trim() || "ShieldShare Zero-Knowledge Encryption Data Sample 2026";
+            const plainBox = document.getElementById('sandbox-plaintext-box');
+            const cipherBox = document.getElementById('sandbox-ciphertext-box');
+            const logBox = document.getElementById('sandbox-log-box');
+
+            plainBox.innerText = inputText;
+
+            if (step === 1) {
+                logBox.innerText = `[Step 1] Generating RSA-2048 Asymmetric Keypair and 256-bit AES-GCM Symmetric Key in RAM...`;
+                const rsaKeys = await generateRSAKeyPair();
+                const pubPEM = await exportPublicKeyPEM(rsaKeys.publicKey);
+                sandboxState.rsaKeys = rsaKeys;
+                sandboxState.pubPEM = pubPEM;
+                logBox.innerText += `\n✓ RSA-2048 Public Key Generated:\n${pubPEM.substring(0, 70)}...`;
+            } else if (step === 2) {
+                logBox.innerText = `[Step 2] Executing AES-256-GCM Encryption...`;
+                const buffer = stringToBuffer(inputText);
+                const { encryptedFileBuffer, rawAesKey } = await encryptFileSymmetric(buffer.buffer);
+                sandboxState.encryptedFileBuffer = encryptedFileBuffer;
+                sandboxState.rawAesKey = rawAesKey;
+                const hexDump = arrayBufferToHex(encryptedFileBuffer);
+                cipherBox.innerText = '0x' + hexDump;
+                logBox.innerText += `\n✓ Encrypted ${buffer.byteLength} Bytes into Scrambled Hex Stream!`;
+            } else if (step === 3) {
+                if (!sandboxState.rawAesKey || !sandboxState.rsaKeys) {
+                    await runSandboxStep(1);
+                    await runSandboxStep(2);
+                }
+                logBox.innerText = `[Step 3] Encapsulating AES Key with RSA-2048 Public Key...`;
+                const encAesKeyB64 = await encryptAesKeyAsymmetric(sandboxState.rawAesKey, sandboxState.rsaKeys.publicKey);
+                sandboxState.encAesKeyB64 = encAesKeyB64;
+                logBox.innerText += `\n✓ Encrypted Key Blob (Base64):\n${encAesKeyB64}`;
+            } else if (step === 4) {
+                if (!sandboxState.encryptedFileBuffer) {
+                    await runSandboxStep(1);
+                    await runSandboxStep(2);
+                    await runSandboxStep(3);
+                }
+                logBox.innerText = `[Step 4] Decrypting AES key with RSA Private Key and unlocking ciphertext...`;
+                const decAesKey = await decryptAesKeyAsymmetric(sandboxState.encAesKeyB64, sandboxState.rsaKeys.privateKey);
+                const decryptedBuffer = await decryptFileSymmetric(sandboxState.encryptedFileBuffer, decAesKey);
+                const decryptedText = bufferToString(decryptedBuffer);
+                const sha256Hex = await computeSHA256Hex(decryptedBuffer);
+
+                logBox.innerText += `\n✓ Decrypted Output Match: "${decryptedText}"`;
+                logBox.innerText += `\n✓ SHA-256 Hash Digest: ${sha256Hex}`;
+                alert(`Decryption & SHA-256 Verification Successful!\nPlaintext: "${decryptedText}"`);
             }
         }
 
@@ -1646,14 +1889,26 @@
             }
         }
 
+        // Terminal Log Helper for Live Encryption Progress
+        function appendTerminalLog(msg) {
+            const terminal = document.getElementById('upload-terminal');
+            const now = new Date();
+            const timeStr = now.toTimeString().split(' ')[0];
+            terminal.innerText += `\n[${timeStr}] ${msg}`;
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
         const uploadForm = document.getElementById('upload-form');
         const uploadLoader = document.getElementById('upload-loader');
         const uploadLoaderText = document.getElementById('upload-loader-text');
 
         uploadForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const terminal = document.getElementById('upload-terminal');
+            terminal.innerText = '[00:00:00] Initializing WebCrypto Encryption Engine...';
+
             uploadLoader.style.display = 'flex';
-            uploadLoaderText.innerText = 'Reading file payload...';
+            uploadLoaderText.innerText = 'Executing Live Client Encryption...';
 
             const fileInput = document.getElementById('file-input');
             if (fileInput.files.length === 0) {
@@ -1665,6 +1920,7 @@
             const file = fileInput.files[0];
             
             try {
+                appendTerminalLog(`📥 Ingesting file payload "${file.name}" (${(file.size / 1024).toFixed(2)} KB)...`);
                 const reader = new FileReader();
                 const fileLoadedPromise = new Promise((resolve) => {
                     reader.onload = () => resolve(reader.result);
@@ -1672,10 +1928,15 @@
                 reader.readAsArrayBuffer(file);
                 const fileBuffer = await fileLoadedPromise;
 
-                uploadLoaderText.innerText = 'Encrypting with AES-256-GCM...';
+                appendTerminalLog(`🔑 Generating random 256-bit AES-GCM symmetric cipher key...`);
+                appendTerminalLog(`🎲 Generating 96-bit Initialization Vector (IV/Nonce)...`);
+                appendTerminalLog(`🔒 Executing AES-256-GCM symmetric encryption...`);
                 const { encryptedFileBuffer, rawAesKey } = await encryptFileSymmetric(fileBuffer);
 
-                uploadLoaderText.innerText = 'Encrypting symmetric key with RSA-OAEP...';
+                const sha256Hex = await computeSHA256Hex(fileBuffer);
+                appendTerminalLog(`⚡ Computed SHA-256 Integrity Checksum: ${sha256Hex.substring(0, 24)}...`);
+
+                appendTerminalLog(`🔐 Encapsulating symmetric AES key using RSA-2048 Public Key...`);
                 const rsaPublicKey = await importPublicKeyPEM(OWNER_PUBLIC_KEY_PEM);
                 const encryptedAesKey = await encryptAesKeyAsymmetric(rawAesKey, rsaPublicKey);
 
@@ -1683,7 +1944,7 @@
                 formData.append('file', new Blob([encryptedFileBuffer]), file.name);
                 formData.append('encrypted_aes_key', encryptedAesKey);
 
-                uploadLoaderText.innerText = 'Uploading encrypted payload to vault...';
+                appendTerminalLog(`🌐 Uploading zero-knowledge scrambled payload to vault server...`);
                 const response = await fetch('/upload', {
                     method: 'POST',
                     body: formData
@@ -1694,7 +1955,10 @@
                     throw new Error(errorText || 'Upload failed.');
                 }
 
-                window.location.href = '/dashboard?message=File+uploaded+and+encrypted+successfully';
+                appendTerminalLog(`✓ Vault storage confirmed! Refreshing dashboard...`);
+                setTimeout(() => {
+                    window.location.href = '/dashboard?message=File+uploaded+and+encrypted+successfully';
+                }, 800);
 
             } catch (err) {
                 console.error(err);

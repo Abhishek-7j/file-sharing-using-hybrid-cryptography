@@ -230,3 +230,9 @@ async function getPublicKeyFingerprint(pem) {
     const hashHex = await computeSHA256Hex(data.buffer);
     return hashHex.substring(0, 16).toUpperCase().match(/.{1,4}/g).join(':');
 }
+
+// 13. Convert ArrayBuffer to Hex String
+function arrayBufferToHex(buffer) {
+    const bytes = new Uint8Array(buffer);
+    return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+}
