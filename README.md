@@ -1,85 +1,117 @@
-# ShieldShare - Secure File Sharing System using Hybrid Cryptography
+# IDENTITY DNA — Continuous Behavioral Authentication System
 
-ShieldShare is a secure, end-to-end encrypted file sharing web application built with Python and Flask. It leverages hybrid cryptography to combine the efficiency of symmetric encryption with the secure key-distribution of asymmetric cryptography.
+> **“Your Behavior. Your Identity. Your Security.”**
 
----
-
-## 🔒 Cryptographic Architecture
-
-ShieldShare employs a multi-layered security architecture:
-
-1. **Symmetric Encryption (AES-256-GCM)**:
-   * Every file uploaded is encrypted using a unique, cryptographically secure 256-bit symmetric key.
-   * Galois/Counter Mode (GCM) provides authenticated encryption, guaranteeing both **confidentiality** and **integrity** (tamper protection) of files stored on disk.
-2. **Asymmetric Key Exchange (RSA-2048)**:
-   * Each user is generated an RSA-2048 key pair upon registration.
-   * Symmetric keys are encrypted using the recipient's RSA public key (with OAEP padding and SHA-256) so they can only be decrypted by the intended recipient.
-3. **Private Key Protection (PBKDF2 & AES-GCM)**:
-   * The server never stores user private keys in plaintext.
-   * Private keys are encrypted on the server using AES-256-GCM, with a key derived from the user's login password using **PBKDF2-HMAC-SHA256**.
-   * The server only decrypts the user's private key in RAM during an active session.
-4. **Password Hashing (Bcrypt/PBKDF2)**:
-   * Passwords are safe from database leaks using standard `werkzeug.security` secure password hashing.
+Identity DNA is a modern, production-grade cybersecurity web application built on the principle of **Continuous Behavioral Authentication**. Unlike traditional passwords, SMS OTPs, or 2FA tokens that authenticate a user only at login, Identity DNA continuously monitors micro-interaction biometrics throughout the active session to verify whether the person currently using the account is its legitimate owner.
 
 ---
 
-## 📂 Project Directory Structure
+## 🧬 Project Overview
 
-```text
-├── .gitignore                    # Git ignore configurations (excl. virtualenvs, databases, keys)
-├── README.md                     # Project documentation (this file)
-└── File Sharing/                 # Core source directory
-    ├── app.py                    # Main Flask web application and routes
-    ├── database.py               # SQLite database setup and schema definition
-    ├── check_users.py            # SQLite utility to check registered users
-    ├── verify_system.py          # End-to-end automated system integration test
-    ├── templates/                # Glassmorphic UI HTML templates
-    │   ├── dashboard.html        # Main dashboard for upload, download, and sharing
-    │   ├── login.html            # Vault unlocking screen
-    │   └── register.html         # Vault creation screen
-    └── utils/                    # Cryptographic helpers
-        └── crypto.py             # Symmetric, asymmetric, and KDF functions
+- **Core Concept**: Continuous AI Behavioral Authentication System
+- **Design Theme**: Deep Navy (`#020617`), Cyan Glow (`#00f0ff`), Glassmorphism, HUD graphics, DNA strand animation, and **"The Identity Guardian"** Radhakrishna-inspired visual identity symbolizing *Harmony + Identity + Security*.
+- **Supported Biometric Signals**:
+  - **Keystroke Dynamics**: Key hold dwell time, inter-key flight interval, typing speed WPM, and rhythmic variance.
+  - **Cursor Kinematics**: Cursor velocity vectors, acceleration profiles, curvature smoothness, and movement distance.
+  - **Click Cadence**: Click hold duration, double-click intervals, and click coordinates variance.
+  - **Scroll Patterns**: Scroll velocity, burst impulse length, direction shifts, and scroll intervals.
+
+---
+
+## 🚀 Key Features
+
+1. **The Identity Guardian Visual**: High-tech fusion of futuristic cybersecurity HUD graphics with Radhakrishna symbolic visual identity (Radha & Krishna silhouettes, digital signal flute wave, biometric peacock feather circuit, lotus mandala geometry, and cyber shield overlay).
+2. **Interactive Onboarding ("Build Your Identity DNA")**: 4-step baseline collector for typing, mouse kinematics, click cadence, and scroll patterns with dynamic 3D DNA helix visualizer.
+3. **Continuous Real-Time Telemetry Tracking**: Background frontend hook (`useBehavioralTracker`) passively capturing live micro-interactions and evaluating weighted similarity scores against the user's baseline.
+4. **Dynamic Security States**:
+   - 🟢 **TRUSTED** (90% – 100%)
+   - 🟡 **MONITORING** (70% – 89%)
+   - 🔴 **SUSPICIOUS** (< 70%, automatically triggers high-risk security alert logging)
+5. **Viva / Demo Anomaly Simulation**: Integrated simulation bar on the dashboard allowing instant live toggling between Trusted, Monitoring, and Suspicious states for review and demonstration.
+6. **Full Cybersecurity Suite**:
+   - 13-Section Cinematic Landing Page
+   - AI Detection Pipeline & Feature Distance Matrix
+   - Behavioral Analytics with Today / Week / Month timeframe selector
+   - Session Login History Audit Log
+   - Security Events Incident Alert Feed
+   - Profile & Configurable Algorithm Settings
+
+---
+
+## 🛠️ Technology Stack
+
+- **Frontend**: React 18, Vite, Tailwind CSS, Lucide Icons, Recharts, Framer Motion.
+- **Backend**: Python 3.14, FastAPI, Pydantic, Passlib (Bcrypt), Python-JOSE (JWT).
+- **Machine Learning**: Weighted exponential distance kernel & scikit-learn anomaly classifier hook.
+- **Database**: MongoDB (Motor async driver) with transparent embedded JSON fallback storage.
+
+---
+
+## 📁 Repository Structure
+
+```
+├── backend/
+│   ├── app/
+│   │   ├── main.py                     # FastAPI entry point & CORS
+│   │   ├── database/
+│   │   │   └── connection.py           # MongoDB & Fallback DB Manager
+│   │   ├── ml/
+│   │   │   └── engine.py               # Feature extraction & weighted ML classifier
+│   │   ├── models/
+│   │   │   └── schemas.py              # Pydantic data schemas
+│   │   ├── routes/
+│   │   │   ├── auth.py                 # /register, /login, /me
+│   │   │   ├── behavior.py             # /behavior/* endpoints & continuous analysis
+│   │   │   ├── security.py             # /security/events alerts
+│   │   │   └── history.py              # /login-history audit log
+│   │   └── security/
+│   │       ├── passwords.py            # Bcrypt password hashing
+│   │       └── tokens.py               # JWT authentication tokens
+│   ├── requirements.txt
+│   └── .env.example
+├── frontend/
+│   ├── src/
+│   │   ├── components/                 # Navbar, Sidebar, RadhakrishnaVisual, DNAVisualization, ConfidenceGauge, etc.
+│   │   ├── hooks/                      # useBehavioralTracker, useAuth
+│   │   ├── pages/                      # Landing, Onboarding, Dashboard, AI Detection, Analytics, History, Security Events, Profile, Settings
+│   │   ├── services/                   # API client & telemetry transport
+│   │   ├── styles/                     # Tailwind CSS & HUD glow effects
+│   │   └── App.jsx
+│   ├── package.json
+│   └── vite.config.js
+└── README.md
 ```
 
 ---
 
-## ⚙️ Quick Start & Setup
+## ⚡ Quick Start
 
-### Prerequisites
-* Python 3.10+
-* Git
-
-### 1. Clone & Setup Directory
-Navigate to the project folder:
+### 1. Backend Setup (FastAPI)
 ```bash
-cd "file sharing using hybrid cryptography/File Sharing"
+cd backend
+pip install -r requirements.txt
+python -m uvicorn app.main:app --port 8080 --reload
 ```
+API Health Check: `http://localhost:8080/health`  
+Interactive Swagger Docs: `http://localhost:8080/docs`
 
-### 2. Set Up Virtual Environment & Dependencies
-Create a virtual environment and install the required libraries:
+### 2. Frontend Setup (React Vite)
 ```bash
-python -m venv venv
-venv\Scripts\activate      # On Windows (cmd)
-source venv/bin/activate   # On Linux/macOS
-
-pip install cryptography flask
+cd frontend
+npm install
+npm run dev
 ```
+Open application in browser: `http://localhost:3000`
 
-### 3. Initialize Database
-Initialize the SQLite schema (this resets `database.db` and prepares the tables):
-```bash
-python database.py
-```
+---
 
-### 4. Run Automated Integrations Test
-To verify all cryptographic functions and database flows work correctly:
-```bash
-python verify_system.py
-```
+## 🛡️ Security & Privacy
+- Zero raw password storage (Bcrypt hashed with salt).
+- Secure JWT bearer tokens.
+- Passive telemetry strictly transformed into statistical feature vector embeddings.
+- Configurable confidence thresholds and threat alert levels.
 
-### 5. Launch the Web App
-Run the Flask server:
-```bash
-python app.py
-```
-Open [http://127.0.0.1:5000/](http://127.0.0.1:5000/) in your web browser to create your vault accounts and start uploading/sharing securely.
+---
+
+## 📄 License
+Released under MIT License. Continuous Behavioral Authentication System © 2026.
