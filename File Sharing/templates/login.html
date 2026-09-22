@@ -319,6 +319,8 @@
                 }
                 privatePEM += "-----END PRIVATE KEY-----";
 
+                // Strictly clear any previous browser session storage to guarantee 100% user isolation
+                window.sessionStorage.clear();
                 window.sessionStorage.setItem('private_key_pem', privatePEM);
                 window.location.href = '/dashboard';
 

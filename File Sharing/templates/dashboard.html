@@ -8,11 +8,11 @@
     <style>
         :root {
             --bg-color: #080B10;
-            --sidebar-bg: rgba(13, 17, 26, 0.95);
             --panel-bg: rgba(18, 22, 31, 0.85);
             --panel-border: rgba(255, 255, 255, 0.12);
             --primary: #FFFFFF;
             --primary-hover: #E2E8F0;
+            --secondary: #475569;
             --text-main: #FFFFFF;
             --text-muted: #94A3B8;
             --border-color: rgba(255, 255, 255, 0.12);
@@ -26,7 +26,7 @@
         }
 
         body {
-            background: radial-gradient(circle at 70% 10%, #1E293B 0%, var(--bg-color) 75%);
+            background: radial-gradient(circle at 50% 10%, #1E293B 0%, var(--bg-color) 70%);
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
@@ -34,13 +34,12 @@
             overflow-x: hidden;
         }
 
-        /* Top Header */
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1.1rem 2rem;
-            background: rgba(11, 15, 22, 0.9);
+            padding: 1.25rem 2.5rem;
+            background: rgba(11, 15, 22, 0.85);
             backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--border-color);
             position: sticky;
@@ -55,7 +54,7 @@
         }
 
         header .logo {
-            font-size: 1.45rem;
+            font-size: 1.5rem;
             font-weight: 800;
             color: #FFFFFF;
             letter-spacing: -0.5px;
@@ -123,172 +122,115 @@
         .btn-sandbox-nav:hover {
             background: #FFFFFF;
             color: #090C10;
+            transform: translateY(-1px);
         }
 
-        .btn-logout-nav {
-            color: #F43F5E;
-            background: rgba(244, 63, 94, 0.1);
-            border: 1px solid rgba(244, 63, 94, 0.3);
-            padding: 0.45rem 1rem;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.35rem;
-        }
-
-        .btn-logout-nav:hover {
-            background: rgba(244, 63, 94, 0.25);
-        }
-
-        /* Executive App Layout: Left Sidebar + Right Content */
-        .app-layout {
-            display: flex;
-            flex: 1;
-            width: 100%;
-            max-width: 1550px;
-            margin: 0 auto;
-        }
-
-        /* Left Sidebar Menu */
-        .sidebar {
-            width: 280px;
-            background: var(--sidebar-bg);
-            border-right: 1px solid var(--border-color);
-            padding: 2rem 1.25rem;
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-            backdrop-filter: blur(16px);
-        }
-
-        .sidebar-section-title {
-            font-size: 0.72rem;
-            font-weight: 700;
-            color: #64748B;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            margin-bottom: 0.6rem;
-            padding-left: 0.75rem;
-        }
-
-        .sidebar-nav {
-            display: flex;
-            flex-direction: column;
-            gap: 0.4rem;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.85rem 1rem;
-            border-radius: 12px;
+        .btn-logout {
             color: var(--text-muted);
             text-decoration: none;
-            font-size: 0.92rem;
-            font-weight: 600;
+            font-size: 0.88rem;
+            font-weight: 500;
+            transition: color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
             cursor: pointer;
-            transition: all 0.2s ease;
-            border: 1px solid transparent;
         }
 
-        .nav-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: #FFFFFF;
+        .btn-logout:hover {
+            color: #F43F5E;
         }
 
-        .nav-item.active {
-            background: #FFFFFF;
-            color: #090C10;
-            font-weight: 700;
-            border-color: #FFFFFF;
-            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
-        }
-
-        .nav-count-badge {
-            font-size: 0.75rem;
-            font-weight: 700;
-            padding: 0.15rem 0.55rem;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.12);
-            color: #FFFFFF;
-        }
-
-        .nav-item.active .nav-count-badge {
-            background: #090C10;
-            color: #FFFFFF;
-        }
-
-        .sidebar-footer {
-            margin-top: auto;
-            border-top: 1px solid var(--border-color);
-            padding-top: 1.25rem;
-        }
-
-        /* Right Main Content Workspace */
-        .main-content {
+        .container {
+            max-width: 1320px;
+            width: 100%;
+            margin: 2rem auto;
+            padding: 0 1.75rem;
             flex: 1;
-            padding: 2rem 2.25rem;
             display: flex;
             flex-direction: column;
             gap: 2rem;
-            overflow-y: auto;
         }
 
-        /* Top Search Bar (POSITIONED ON TOP OF UPLOAD BOX) */
-        .top-search-panel {
-            background: var(--panel-bg);
-            border: 1px solid var(--panel-border);
-            border-radius: 18px;
-            padding: 1.25rem 1.75rem;
-            backdrop-filter: blur(16px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        /* Search & Filter Bar (Positioned Top) */
+        .controls-bar {
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            gap: 1.5rem;
+            align-items: center;
+            gap: 1.25rem;
+            background: rgba(18, 22, 31, 0.7);
+            padding: 1rem 1.25rem;
+            border-radius: 18px;
+            border: 1px solid var(--panel-border);
+            backdrop-filter: blur(12px);
+            flex-wrap: wrap;
         }
 
         .search-box {
             position: relative;
             flex: 1;
+            min-width: 280px;
         }
 
         .search-input {
             width: 100%;
-            padding: 0.8rem 1rem 0.8rem 2.75rem;
+            padding: 0.75rem 1rem 0.75rem 2.6rem;
             background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--panel-border);
             border-radius: 12px;
             color: var(--text-main);
-            font-size: 0.95rem;
+            font-size: 0.92rem;
             outline: none;
             transition: all 0.2s ease;
         }
 
         .search-input:focus {
             border-color: #FFFFFF;
-            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15);
         }
 
         .search-icon {
             position: absolute;
-            left: 1rem;
+            left: 0.9rem;
             top: 50%;
             transform: translateY(-50%);
-            color: #94A3B8;
+            color: #64748B;
             font-size: 1rem;
         }
 
-        /* Metrics Banner */
+        .filter-tabs {
+            display: flex;
+            gap: 0.4rem;
+            background: rgba(11, 15, 22, 0.8);
+            padding: 0.35rem;
+            border-radius: 12px;
+            border: 1px solid var(--panel-border);
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            background: #FFFFFF;
+            color: #090C10;
+            font-weight: 700;
+            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Top Metrics Banner */
         .metrics-banner {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 1.25rem;
         }
 
@@ -311,20 +253,20 @@
         }
 
         .metric-icon-box {
-            width: 46px;
-            height: 46px;
+            width: 48px;
+            height: 48px;
             border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.35rem;
+            font-size: 1.4rem;
             background: rgba(255, 255, 255, 0.06);
             border: 1px solid rgba(255, 255, 255, 0.15);
             color: #FFFFFF;
         }
 
         .metric-details .label {
-            font-size: 0.75rem;
+            font-size: 0.78rem;
             font-weight: 700;
             color: var(--text-muted);
             text-transform: uppercase;
@@ -342,6 +284,22 @@
             font-size: 0.72rem;
             color: #64748B;
             margin-top: 0.15rem;
+        }
+
+        .storage-progress-bar {
+            width: 100%;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin-top: 0.4rem;
+            overflow: hidden;
+        }
+
+        .storage-progress-fill {
+            height: 100%;
+            background: #FFFFFF;
+            width: 0%;
+            transition: width 0.5s ease;
         }
 
         .alert {
@@ -423,7 +381,7 @@
         }
 
         .panel-title {
-            font-size: 1.2rem;
+            font-size: 1.25rem;
             font-weight: 700;
             margin-bottom: 1.5rem;
             display: flex;
@@ -442,7 +400,7 @@
             justify-content: center;
             border: 2px dashed rgba(255, 255, 255, 0.25);
             border-radius: 18px;
-            padding: 2.5rem 2rem;
+            padding: 2.75rem 2rem;
             background: rgba(11, 15, 22, 0.6);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
@@ -917,7 +875,6 @@
     </style>
     <script src="/static/js/crypto-helper.js"></script>
     <script>
-        // Redirect to logout if no decrypted private key in sessionStorage
         if (!window.sessionStorage.getItem('private_key_pem')) {
             window.location.href = '/logout';
         }
@@ -936,356 +893,322 @@
         </div>
         <div class="user-menu">
             <button class="btn-sandbox-nav" onclick="openModal('sandbox-modal')">🔬 Live Crypto Sandbox</button>
-            <span class="user-badge">🔑 Vault: {{ username }}</span>
-            <button onclick="lockVault()" class="btn-logout-nav">
+            <span class="user-badge" title="{{ user_email }}">🔑 Vault: {{ username }}</span>
+            <button onclick="handleLogout()" class="btn-logout" style="background:none; border:none;">
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                 Lock Vault
             </button>
         </div>
     </header>
 
-    <!-- Executive App Layout: Left Sidebar + Right Content Workspace -->
-    <div class="app-layout">
+    <div class="container">
 
-        <!-- Left Sidebar Navigation -->
-        <aside class="sidebar">
-            <div>
-                <div class="sidebar-section-title">Navigation Menu</div>
-                <nav class="sidebar-nav">
-                    <a class="nav-item active" id="side-own" onclick="setSidebarTab('own')">
-                        <span>📁 My Vault Files</span>
-                        <span class="nav-count-badge">{{ own_files|length }}</span>
-                    </a>
-                    <a class="nav-item" id="side-shared" onclick="setSidebarTab('shared')">
-                        <span>🤝 Received Files</span>
-                        <span class="nav-count-badge">{{ shared_files|length }}</span>
-                    </a>
-                    <a class="nav-item" id="side-outbound" onclick="setSidebarTab('outbound')">
-                        <span>📤 Outbound Shares</span>
-                        <span class="nav-count-badge">{{ outbound_shares|length }}</span>
-                    </a>
-                </nav>
+        <!-- Search & Section Navigation Controls Bar (Positioned Top) -->
+        <div class="controls-bar">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="search-input" class="search-input" placeholder="Search files by name..." onkeyup="filterFiles()">
             </div>
-
-            <div>
-                <div class="sidebar-section-title">Tools & Verification</div>
-                <nav class="sidebar-nav">
-                    <a class="nav-item" onclick="openModal('sandbox-modal')">
-                        <span>🔬 Live Sandbox</span>
-                    </a>
-                    <a class="nav-item" onclick="openModal('verify-modal')">
-                        <span>🛡️ Security Audit</span>
-                    </a>
-                </nav>
+            <div class="filter-tabs">
+                <button class="tab-btn active" id="tab-own" onclick="setFilter('own')">📁 My Vault ({{ own_files|length }})</button>
+                <button class="tab-btn" id="tab-shared" onclick="setFilter('shared')">📥 Received Shares ({{ shared_files|length }})</button>
+                <button class="tab-btn" id="tab-outbound" onclick="setFilter('outbound')">📤 Outbound Shared By Me ({{ outbound_shares|length }})</button>
+                <button class="tab-btn" id="tab-all" onclick="setFilter('all')">📊 All Vault Sections</button>
             </div>
+        </div>
 
-            <div class="sidebar-footer">
-                <div style="font-size: 0.78rem; color: #64748B; margin-bottom: 0.6rem;">Isolated Vault Session</div>
-                <button onclick="lockVault()" style="width: 100%; padding: 0.7rem; background: rgba(244, 63, 94, 0.12); border: 1px solid rgba(244, 63, 94, 0.3); border-radius: 10px; color: #FECDD3; font-weight: 600; font-size: 0.85rem; cursor: pointer;">
-                    🔒 Lock & Purge Session
-                </button>
-            </div>
-        </aside>
-
-        <!-- Right Main Content Workspace -->
-        <main class="main-content">
-
-            <!-- Top Search Bar (POSITIONED ON TOP OF UPLOAD BOX AS REQUESTED) -->
-            <div class="top-search-panel">
-                <div class="search-box">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" id="search-input" class="search-input" placeholder="Search your vault files by name..." onkeyup="filterFiles()">
-                </div>
-                <div style="font-size: 0.82rem; color: #94A3B8; font-weight: 500;">
-                    Instant File Filter
+        <!-- Top Cryptographic & Personal Storage Metrics Banner -->
+        <div class="metrics-banner">
+            <div class="metric-card">
+                <div class="metric-icon-box">🛡️</div>
+                <div class="metric-details">
+                    <div class="label">Vault Isolation Status</div>
+                    <div class="value">A+ E2EE Isolated</div>
+                    <div class="subtext">{{ user_email }}</div>
                 </div>
             </div>
 
-            <!-- Top Metrics Banner -->
-            <div class="metrics-banner">
-                <div class="metric-card">
-                    <div class="metric-icon-box">🛡️</div>
-                    <div class="metric-details">
-                        <div class="label">Vault Engine</div>
-                        <div class="value">Zero-Knowledge E2EE</div>
-                        <div class="subtext">AES-256-GCM + RSA-2048</div>
-                    </div>
-                </div>
-
-                <div class="metric-card">
-                    <div class="metric-icon-box">📁</div>
-                    <div class="metric-details">
-                        <div class="label">Owned Vault Files</div>
-                        <div class="value">{{ own_files|length }} Files</div>
-                        <div class="subtext">Personal Storage Footprint</div>
-                    </div>
-                </div>
-
-                <div class="metric-card">
-                    <div class="metric-icon-box">📤</div>
-                    <div class="metric-details">
-                        <div class="label">Files Shared By Me</div>
-                        <div class="value">{{ outbound_shares|length }} Active Shares</div>
-                        <div class="subtext">Outbound Key Exchanges</div>
-                    </div>
-                </div>
-
-                <div class="metric-card">
-                    <div class="metric-icon-box">📥</div>
-                    <div class="metric-details">
-                        <div class="label">Files Received</div>
-                        <div class="value">{{ shared_files|length }} Received Files</div>
-                        <div class="subtext">Inbound Access Grants</div>
+            <div class="metric-card">
+                <div class="metric-icon-box">📁</div>
+                <div class="metric-details">
+                    <div class="label">Personal Storage Usage</div>
+                    <div class="value" id="total-volume-val">Calculated...</div>
+                    <div class="subtext">{{ own_files|length }} Personal Vault Files</div>
+                    <div class="storage-progress-bar">
+                        <div class="storage-progress-fill" id="storage-progress-fill"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Client Notifications -->
-            <div class="alert alert-success" id="alert-success"></div>
-            <div class="alert alert-error" id="alert-error"></div>
-
-            <!-- Upload Panel -->
-            <div class="panel">
-                <div class="overlay-loader" id="upload-loader">
-                    <div class="spinner"></div>
-                    <div id="upload-loader-text" style="font-weight: 700; color: #FFFFFF;">Live Cryptographic Encryption Console...</div>
-                    <div class="terminal-log-box" id="upload-terminal"></div>
+            <div class="metric-card">
+                <div class="metric-icon-box">📤</div>
+                <div class="metric-details">
+                    <div class="label">Files Shared By Me</div>
+                    <div class="value">{{ outbound_shares|length }} Active Shares</div>
+                    <div class="subtext">Outbound Key Grants</div>
                 </div>
+            </div>
 
-                <div class="panel-title">
-                    <span>📤 Upload & Encrypt New Vault File</span>
-                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">Zero-Knowledge Client Cryptography</span>
+            <div class="metric-card">
+                <div class="metric-icon-box">📥</div>
+                <div class="metric-details">
+                    <div class="label">Files Received</div>
+                    <div class="value">{{ shared_files|length }} Received Files</div>
+                    <div class="subtext">Inbound Key Grants</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Client Notifications -->
+        <div class="alert alert-success" id="alert-success"></div>
+        <div class="alert alert-error" id="alert-error"></div>
+
+        <!-- Upload Panel -->
+        <div class="panel">
+            <div class="overlay-loader" id="upload-loader">
+                <div class="spinner"></div>
+                <div id="upload-loader-text" style="font-weight: 700; color: #FFFFFF;">Live Cryptographic Encryption Console...</div>
+                <div class="terminal-log-box" id="upload-terminal"></div>
+            </div>
+
+            <div class="panel-title">
+                <span>📤 Upload & Encrypt New Vault File</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">Zero-Knowledge Client Cryptography</span>
+            </div>
+            
+            <form id="upload-form">
+                <div class="upload-section" id="drop-zone" onclick="document.getElementById('file-input').click()">
+                    <div class="upload-icon">🔒</div>
+                    <div class="upload-text">
+                        <span>Click to choose a file</span> or drag & drop it here
+                        <br>
+                        <small style="color: var(--text-muted); font-size: 0.78rem;">Files are symmetrically encrypted with AES-256-GCM before leaving your browser.</small>
+                    </div>
+                    <input type="file" id="file-input" name="file" class="upload-input" onchange="fileSelected(this)" required>
+                    <div class="selected-file-info" id="file-info">Selected: <span id="file-name"></span> (<span id="file-size-preview"></span>)</div>
                 </div>
                 
-                <form id="upload-form">
-                    <div class="upload-section" id="drop-zone" onclick="document.getElementById('file-input').click()">
-                        <div class="upload-icon">🔒</div>
-                        <div class="upload-text">
-                            <span>Click to choose a file</span> or drag & drop it here
-                            <br>
-                            <small style="color: var(--text-muted); font-size: 0.78rem;">Files are symmetrically encrypted with AES-256-GCM before leaving your browser.</small>
-                        </div>
-                        <input type="file" id="file-input" name="file" class="upload-input" onchange="fileSelected(this)" required>
-                        <div class="selected-file-info" id="file-info">Selected: <span id="file-name"></span> (<span id="file-size-preview"></span>)</div>
-                    </div>
-                    
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div style="font-size: 0.8rem; color: #64748B;">✓ Automatically generates SHA-256 integrity hash</div>
-                        <button type="submit" class="btn-upload">
-                            <span>🔒 Encrypt & Store File</span>
-                        </button>
-                    </div>
-                </form>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 0.8rem; color: #64748B;">✓ Automatically generates SHA-256 integrity hash</div>
+                    <button type="submit" class="btn-upload">
+                        <span>🔒 Encrypt & Store File</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Panel 1: My Vault Files (Personal Storage - Default View) -->
+        <div class="panel" id="panel-own">
+            <div class="overlay-loader" id="own-loader">
+                <div class="spinner"></div>
+                <div id="own-loader-text">Working...</div>
             </div>
 
-            <!-- Active View Panel 1: My Vault Files -->
-            <div class="panel" id="panel-own">
-                <div class="overlay-loader" id="own-loader">
-                    <div class="spinner"></div>
-                    <div id="own-loader-text">Working...</div>
-                </div>
-
-                <div class="panel-title">
-                    <span>📁 My Vault Files (Personal Storage)</span>
-                    <span style="font-size: 0.8rem; color: #FFFFFF; font-weight: 600;">AES-256-GCM Symmetrically Encrypted</span>
-                </div>
-                
-                <div class="table-container">
-                    <table id="own-files-table">
-                        <thead>
-                            <tr>
-                                <th>Filename</th>
-                                <th>Upload Date (Local)</th>
-                                <th>Size</th>
-                                <th>Encryption Spec</th>
-                                <th>Share Vault Access</th>
-                                <th>Actions</th>
+            <div class="panel-title">
+                <span>📁 My Vault Files (Personal Storage)</span>
+                <span style="font-size: 0.8rem; color: #FFFFFF; font-weight: 600;">AES-256-GCM Symmetrically Encrypted</span>
+            </div>
+            
+            <div class="table-container">
+                <table id="own-files-table">
+                    <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Upload Date (Local)</th>
+                            <th>Size</th>
+                            <th>Encryption Spec</th>
+                            <th>Share Vault Access</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if own_files %}
+                            {% for file in own_files %}
+                            <tr class="file-row own-row" data-filename="{{ file.filename | lower }}">
+                                <td>
+                                    <div class="filename-container">
+                                        <span class="file-icon">📄</span>
+                                        <strong>{{ file.filename }}</strong>
+                                        <span class="ext-tag">{{ file.filename.split('.')[-1].upper() if '.' in file.filename else 'FILE' }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="date-cell" data-utc="{{ file.upload_date }}">
+                                        <span class="formatted-date">{{ file.upload_date }}</span>
+                                        <span class="relative-time">UTC</span>
+                                    </div>
+                                </td>
+                                <td><strong style="color: #E2E8F0;">{{ (file.file_size / 1024) | round(2) }} KB</strong></td>
+                                <td>
+                                    <div style="display: flex; gap: 0.3rem; flex-wrap: wrap;">
+                                        <span class="badge badge-aes">AES-256-GCM</span>
+                                        <span class="badge badge-sha">SHA-256</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                        <form class="share-form" onsubmit="shareFile(event, {{ file.id }})">
+                                            <input type="text" class="share-input" placeholder="Username" required>
+                                            <button type="submit" class="btn-action btn-share">Share</button>
+                                        </form>
+                                        <button type="button" onclick="openAccessManager({{ file.id }}, '{{ file.filename }}')" class="btn-action btn-grants" title="View & Revoke Access">👥 Grants</button>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="action-group">
+                                        <button onclick="viewAndPreview({{ file.id }}, '{{ file.filename }}')" class="btn-action btn-preview" title="Decrypt in memory and preview inline">👁️ Preview</button>
+                                        <button onclick="inspectRawCiphertextModal({{ file.id }}, '{{ file.filename }}')" class="btn-action btn-inspect" title="Inspect Raw Encrypted Hex Data Stored on Server Disk">🔬 Inspect</button>
+                                        <button onclick="verifyIntegrityModal({{ file.id }}, '{{ file.filename }}', {{ file.file_size }})" class="btn-action btn-verify" title="Cryptographic Integrity Audit">🛡️ Verify</button>
+                                        <button onclick="downloadAndDecrypt({{ file.id }}, '{{ file.filename }}')" class="btn-action btn-download" title="Decrypt and download file">📥 Download</button>
+                                    </div>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {% if own_files %}
-                                {% for file in own_files %}
-                                <tr class="file-row own-row" data-filename="{{ file.filename | lower }}">
-                                    <td>
-                                        <div class="filename-container">
-                                            <span class="file-icon">📄</span>
-                                            <strong>{{ file.filename }}</strong>
-                                            <span class="ext-tag">{{ file.filename.split('.')[-1].upper() if '.' in file.filename else 'FILE' }}</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="date-cell" data-utc="{{ file.upload_date }}">
-                                            <span class="formatted-date">{{ file.upload_date }}</span>
-                                            <span class="relative-time">UTC</span>
-                                        </div>
-                                    </td>
-                                    <td><strong style="color: #E2E8F0;">{{ (file.file_size / 1024) | round(2) }} KB</strong></td>
-                                    <td>
-                                        <div style="display: flex; gap: 0.3rem; flex-wrap: wrap;">
-                                            <span class="badge badge-aes">AES-256-GCM</span>
-                                            <span class="badge badge-sha">SHA-256</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div style="display: flex; align-items: center; gap: 0.4rem;">
-                                            <form class="share-form" onsubmit="shareFile(event, {{ file.id }})">
-                                                <input type="text" class="share-input" placeholder="Username" required>
-                                                <button type="submit" class="btn-action btn-share">Share</button>
-                                            </form>
-                                            <button type="button" onclick="openAccessManager({{ file.id }}, '{{ file.filename }}')" class="btn-action btn-grants" title="View & Revoke Access">👥 Grants</button>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="action-group">
-                                            <button onclick="viewAndPreview({{ file.id }}, '{{ file.filename }}')" class="btn-action btn-preview" title="Decrypt in memory and preview inline">👁️ Preview</button>
-                                            <button onclick="inspectRawCiphertextModal({{ file.id }}, '{{ file.filename }}')" class="btn-action btn-inspect" title="Inspect Raw Encrypted Hex Data Stored on Server Disk">🔬 Inspect</button>
-                                            <button onclick="verifyIntegrityModal({{ file.id }}, '{{ file.filename }}', {{ file.file_size }})" class="btn-action btn-verify" title="Cryptographic Integrity Audit">🛡️ Verify</button>
-                                            <button onclick="downloadAndDecrypt({{ file.id }}, '{{ file.filename }}')" class="btn-action btn-download" title="Decrypt and download file">📥 Download</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            {% else %}
-                                <tr>
-                                    <td colspan="6" class="no-data">No files uploaded yet in this cryptographic vault.</td>
-                                </tr>
-                            {% endif %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Active View Panel 2: Shared With Me (Received Files) -->
-            <div class="panel" id="panel-shared" style="display: none;">
-                <div class="overlay-loader" id="shared-loader">
-                    <div class="spinner"></div>
-                    <div id="shared-loader-text">Working...</div>
-                </div>
-
-                <div class="panel-title">
-                    <span>🤝 Shared With Me (Received Files)</span>
-                    <span style="font-size: 0.8rem; color: #CBD5E1; font-weight: 600;">RSA Key Exchanged</span>
-                </div>
-                
-                <div class="table-container">
-                    <table id="shared-files-table">
-                        <thead>
+                            {% endfor %}
+                        {% else %}
                             <tr>
-                                <th>Filename</th>
-                                <th>Shared By</th>
-                                <th>Upload Date (Local)</th>
-                                <th>Size</th>
-                                <th>Key Encryption</th>
-                                <th>Actions</th>
+                                <td colspan="6" class="no-data">No personal files uploaded yet in this vault.</td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {% if shared_files %}
-                                {% for file in shared_files %}
-                                <tr class="file-row shared-row" data-filename="{{ file.filename | lower }}">
-                                    <td>
-                                        <div class="filename-container">
-                                            <span class="file-icon">🔒</span>
-                                            <strong>{{ file.filename }}</strong>
-                                            <span class="ext-tag">{{ file.filename.split('.')[-1].upper() if '.' in file.filename else 'FILE' }}</span>
-                                        </div>
-                                    </td>
-                                    <td><span style="color: #FFFFFF; font-weight: 600;">🔑 {{ file.owner_username }}</span></td>
-                                    <td>
-                                        <div class="date-cell" data-utc="{{ file.upload_date }}">
-                                            <span class="formatted-date">{{ file.upload_date }}</span>
-                                            <span class="relative-time">UTC</span>
-                                        </div>
-                                    </td>
-                                    <td><strong style="color: #E2E8F0;">{{ (file.file_size / 1024) | round(2) }} KB</strong></td>
-                                    <td>
-                                        <span class="badge badge-rsa">RSA-OAEP-2048</span>
-                                    </td>
-                                    <td>
-                                        <div class="action-group">
-                                            <button onclick="viewAndPreview({{ file.id }}, '{{ file.filename }}')" class="btn-action btn-preview">👁️ Preview</button>
-                                            <button onclick="inspectRawCiphertextModal({{ file.id }}, '{{ file.filename }}')" class="btn-action btn-inspect">🔬 Inspect</button>
-                                            <button onclick="verifyIntegrityModal({{ file.id }}, '{{ file.filename }}', {{ file.file_size }})" class="btn-action btn-verify">🛡️ Verify</button>
-                                            <button onclick="downloadAndDecrypt({{ file.id }}, '{{ file.filename }}')" class="btn-action btn-download">📥 Download</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            {% else %}
-                                <tr>
-                                    <td colspan="6" class="no-data">No files shared with your cryptographic vault yet.</td>
-                                </tr>
-                            {% endif %}
-                        </tbody>
-                    </table>
-                </div>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Panel 2: Shared With Me (Received Files) -->
+        <div class="panel" id="panel-shared" style="display: none;">
+            <div class="overlay-loader" id="shared-loader">
+                <div class="spinner"></div>
+                <div id="shared-loader-text">Working...</div>
             </div>
 
-            <!-- Active View Panel 3: Outbound Shares Sent (Files Shared BY Me to Others) -->
-            <div class="panel" id="panel-outbound" style="display: none;">
-                <div class="panel-title">
-                    <span>📤 Outbound Shares Sent (Shared By Me)</span>
-                    <span style="font-size: 0.8rem; color: #FFFFFF; font-weight: 600;">Recipient Access Verification Ledger</span>
-                </div>
-                
-                <div class="table-container">
-                    <table id="outbound-files-table">
-                        <thead>
+            <div class="panel-title">
+                <span>🤝 Shared With Me (Received Files)</span>
+                <span style="font-size: 0.8rem; color: #CBD5E1; font-weight: 600;">RSA Key Exchanged</span>
+            </div>
+            
+            <div class="table-container">
+                <table id="shared-files-table">
+                    <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Shared By</th>
+                            <th>Upload Date (Local)</th>
+                            <th>Size</th>
+                            <th>Key Encryption</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if shared_files %}
+                            {% for file in shared_files %}
+                            <tr class="file-row shared-row" data-filename="{{ file.filename | lower }}">
+                                <td>
+                                    <div class="filename-container">
+                                        <span class="file-icon">🔒</span>
+                                        <strong>{{ file.filename }}</strong>
+                                        <span class="ext-tag">{{ file.filename.split('.')[-1].upper() if '.' in file.filename else 'FILE' }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong style="color: #FFFFFF; font-size: 0.92rem;">🔑 {{ file.owner_username }}</strong>
+                                        <div style="font-size: 0.78rem; color: #94A3B8;">{{ file.owner_email }}</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="date-cell" data-utc="{{ file.upload_date }}">
+                                        <span class="formatted-date">{{ file.upload_date }}</span>
+                                        <span class="relative-time">UTC</span>
+                                    </div>
+                                </td>
+                                <td><strong style="color: #E2E8F0;">{{ (file.file_size / 1024) | round(2) }} KB</strong></td>
+                                <td>
+                                    <span class="badge badge-rsa">RSA-OAEP-2048</span>
+                                </td>
+                                <td>
+                                    <div class="action-group">
+                                        <button onclick="viewAndPreview({{ file.id }}, '{{ file.filename }}')" class="btn-action btn-preview">👁️ Preview</button>
+                                        <button onclick="inspectRawCiphertextModal({{ file.id }}, '{{ file.filename }}')" class="btn-action btn-inspect">🔬 Inspect</button>
+                                        <button onclick="verifyIntegrityModal({{ file.id }}, '{{ file.filename }}', {{ file.file_size }})" class="btn-action btn-verify">🛡️ Verify</button>
+                                        <button onclick="downloadAndDecrypt({{ file.id }}, '{{ file.filename }}')" class="btn-action btn-download">📥 Download</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
                             <tr>
-                                <th>Filename</th>
-                                <th>Recipient Details</th>
-                                <th>Upload Date (Local)</th>
-                                <th>Size</th>
-                                <th>Key Encryption</th>
-                                <th>Access Control</th>
+                                <td colspan="6" class="no-data">No files shared with your cryptographic vault yet.</td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {% if outbound_shares %}
-                                {% for share_item in outbound_shares %}
-                                <tr class="file-row outbound-row" data-filename="{{ share_item.filename | lower }}">
-                                    <td>
-                                        <div class="filename-container">
-                                            <span class="file-icon">📤</span>
-                                            <strong>{{ share_item.filename }}</strong>
-                                            <span class="ext-tag">{{ share_item.filename.split('.')[-1].upper() if '.' in share_item.filename else 'FILE' }}</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div>
-                                            <strong style="color: #FFFFFF; font-size: 0.92rem;">👤 {{ share_item.recipient_username }}</strong>
-                                            <div style="font-size: 0.78rem; color: #94A3B8;">{{ share_item.recipient_email }}</div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="date-cell" data-utc="{{ share_item.upload_date }}">
-                                            <span class="formatted-date">{{ share_item.upload_date }}</span>
-                                            <span class="relative-time">UTC</span>
-                                        </div>
-                                    </td>
-                                    <td><strong style="color: #E2E8F0;">{{ (share_item.file_size / 1024) | round(2) }} KB</strong></td>
-                                    <td>
-                                        <span class="badge badge-rsa">RSA-OAEP-2048</span>
-                                    </td>
-                                    <td>
-                                        <button onclick="revokeUserShare({{ share_item.file_id }}, '{{ share_item.recipient_username }}')" class="btn-revoke">🚫 Revoke Share</button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            {% else %}
-                                <tr>
-                                    <td colspan="6" class="no-data">You have not shared any files with other users yet.</td>
-                                </tr>
-                            {% endif %}
-                        </tbody>
-                    </table>
-                </div>
+                        {% endif %}
+                    </tbody>
+                </table>
             </div>
+        </div>
 
-        </main>
+        <!-- Panel 3: Outbound Shares Sent (Files Shared BY Me to Others) -->
+        <div class="panel" id="panel-outbound" style="display: none;">
+            <div class="panel-title">
+                <span>📤 Outbound Shares Sent (Shared By Me)</span>
+                <span style="font-size: 0.8rem; color: #FFFFFF; font-weight: 600;">Recipient Access Verification Ledger</span>
+            </div>
+            
+            <div class="table-container">
+                <table id="outbound-files-table">
+                    <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Recipient Details</th>
+                            <th>Upload Date (Local)</th>
+                            <th>Size</th>
+                            <th>Key Encryption</th>
+                            <th>Access Control</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if outbound_shares %}
+                            {% for share_item in outbound_shares %}
+                            <tr class="file-row outbound-row" data-filename="{{ share_item.filename | lower }}">
+                                <td>
+                                    <div class="filename-container">
+                                        <span class="file-icon">📤</span>
+                                        <strong>{{ share_item.filename }}</strong>
+                                        <span class="ext-tag">{{ share_item.filename.split('.')[-1].upper() if '.' in share_item.filename else 'FILE' }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong style="color: #FFFFFF; font-size: 0.92rem;">👤 {{ share_item.recipient_username }}</strong>
+                                        <div style="font-size: 0.78rem; color: #94A3B8;">{{ share_item.recipient_email }}</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="date-cell" data-utc="{{ share_item.upload_date }}">
+                                        <span class="formatted-date">{{ share_item.upload_date }}</span>
+                                        <span class="relative-time">UTC</span>
+                                    </div>
+                                </td>
+                                <td><strong style="color: #E2E8F0;">{{ (share_item.file_size / 1024) | round(2) }} KB</strong></td>
+                                <td>
+                                    <span class="badge badge-rsa">RSA-OAEP-2048</span>
+                                </td>
+                                <td>
+                                    <button onclick="revokeUserShare({{ share_item.file_id }}, '{{ share_item.recipient_username }}')" class="btn-revoke">🚫 Revoke Share</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="no-data">You have not shared any files with other users yet.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
     </div>
 
+    <!-- Modals -->
     <!-- Modal 1: In-Browser Previewer -->
     <div class="modal-overlay" id="preview-modal">
         <div class="modal-box">
@@ -1397,7 +1320,7 @@
             </div>
             <div class="modal-body">
                 <div style="background: rgba(255, 255, 255, 0.05); padding: 0.85rem 1.1rem; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.15); font-size: 0.85rem; color: #E2E8F0;">
-                    <strong>Zero-Knowledge Disk Storage Proof:</strong> This window displays the exact raw scrambled binary bytes stored on the cloud server disk.
+                    <strong>Zero-Knowledge Disk Storage Proof:</strong> This window displays the exact raw scrambled binary bytes stored on the cloud server disk. Notice that without your private RSA key, the payload is completely unreadable hexadecimal ciphertext.
                 </div>
 
                 <div>
@@ -1420,7 +1343,7 @@
         </div>
     </div>
 
-    <!-- Modal 5: Interactive Live Encryption Visualizer & Sandbox -->
+    <!-- Modal 5: Live Encryption Visualizer & Sandbox -->
     <div class="modal-overlay" id="sandbox-modal">
         <div class="modal-box" style="max-width: 850px;">
             <div class="modal-header">
@@ -1480,11 +1403,6 @@
         const successBox = document.getElementById('alert-success');
         const errorBox = document.getElementById('alert-error');
 
-        function lockVault() {
-            window.sessionStorage.clear();
-            window.location.href = '/logout';
-        }
-
         function showSuccess(msg) {
             errorBox.style.display = 'none';
             successBox.innerText = '✓ ' + msg;
@@ -1497,6 +1415,11 @@
             errorBox.innerText = '✗ ' + msg;
             errorBox.style.display = 'block';
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function handleLogout() {
+            window.sessionStorage.clear();
+            window.location.href = '/logout';
         }
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -1533,38 +1456,61 @@
 
         async function initMetrics() {
             formatAllDates();
+
+            let totalOwnBytes = 0;
+            {% for f in own_files %}
+                totalOwnBytes += {{ f.file_size }};
+            {% endfor %}
+
+            const volumeVal = document.getElementById('total-volume-val');
+            const fillBar = document.getElementById('storage-progress-fill');
+            
+            if (totalOwnBytes < 1024 * 1024) {
+                volumeVal.innerText = (totalOwnBytes / 1024).toFixed(2) + ' KB Used';
+            } else {
+                volumeVal.innerText = (totalOwnBytes / (1024 * 1024)).toFixed(2) + ' MB Used';
+            }
+
+            // Calculate percentage based on 100 MB max quota
+            const maxQuotaBytes = 100 * 1024 * 1024;
+            const percentage = Math.min(100, Math.max(1, (totalOwnBytes / maxQuotaBytes) * 100));
+            fillBar.style.width = percentage.toFixed(1) + '%';
         }
         window.addEventListener('DOMContentLoaded', initMetrics);
 
-        // Sidebar Navigation Switcher
-        let currentTab = 'own';
-        function setSidebarTab(tab) {
-            currentTab = tab;
-            document.querySelectorAll('.sidebar-nav .nav-item').forEach(el => el.classList.remove('active'));
-            document.getElementById(`side-${tab}`).classList.add('active');
-
-            const ownPanel = document.getElementById('panel-own');
-            const sharedPanel = document.getElementById('panel-shared');
-            const outboundPanel = document.getElementById('panel-outbound');
-
-            if (tab === 'own') {
-                ownPanel.style.display = 'block';
-                sharedPanel.style.display = 'none';
-                outboundPanel.style.display = 'none';
-            } else if (tab === 'shared') {
-                ownPanel.style.display = 'none';
-                sharedPanel.style.display = 'block';
-                outboundPanel.style.display = 'none';
-            } else if (tab === 'outbound') {
-                ownPanel.style.display = 'none';
-                sharedPanel.style.display = 'none';
-                outboundPanel.style.display = 'block';
-            }
+        // Section Filter Tabs Switcher
+        let currentFilter = 'own';
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`tab-${filter}`).classList.add('active');
             filterFiles();
         }
 
         function filterFiles() {
             const query = document.getElementById('search-input').value.toLowerCase().trim();
+            const ownPanel = document.getElementById('panel-own');
+            const sharedPanel = document.getElementById('panel-shared');
+            const outboundPanel = document.getElementById('panel-outbound');
+
+            if (currentFilter === 'own') {
+                ownPanel.style.display = 'block';
+                sharedPanel.style.display = 'none';
+                outboundPanel.style.display = 'none';
+            } else if (currentFilter === 'shared') {
+                ownPanel.style.display = 'none';
+                sharedPanel.style.display = 'block';
+                outboundPanel.style.display = 'none';
+            } else if (currentFilter === 'outbound') {
+                ownPanel.style.display = 'none';
+                sharedPanel.style.display = 'none';
+                outboundPanel.style.display = 'block';
+            } else {
+                ownPanel.style.display = 'block';
+                sharedPanel.style.display = 'block';
+                outboundPanel.style.display = 'block';
+            }
+
             document.querySelectorAll('.file-row').forEach(row => {
                 const name = row.getAttribute('data-filename') || '';
                 if (name.includes(query)) {

@@ -219,9 +219,11 @@ def login():
         conn.close()
 
         if user and check_password_hash(user["password_hash"], password):
-            # Authenticate Flask session (private key stored client-side only!)
+            # Strictly purge previous session data to ensure 100% user isolation
+            session.clear()
             session["user_id"] = user["id"]
             session["username"] = user["username"]
+            session["email"] = user["email"]
             return {
                 "status": "success",
                 "username": user["username"],
@@ -243,27 +245,28 @@ def dashboard():
     cursor = conn.cursor()
     is_postgres = not isinstance(conn, sqlite3.Connection)
 
-    # 1. Fetch user public key for client-side uploads
-    query_pub = "SELECT public_key FROM users WHERE id = %s" if is_postgres else "SELECT public_key FROM users WHERE id = ?"
+    # 1. Fetch user email and public key for client-side uploads & display
+    query_pub = "SELECT email, public_key FROM users WHERE id = %s" if is_postgres else "SELECT email, public_key FROM users WHERE id = ?"
     cursor.execute(query_pub, (user_id,))
     user_record = cursor.fetchone()
+    user_email = user_record["email"] if user_record else ""
     owner_public_key = user_record["public_key"] if user_record else ""
 
-    # 2. Query own files
+    # 2. Query own files (Strict user_id isolation)
     query_own = "SELECT * FROM files WHERE owner_id = %s ORDER BY upload_date DESC" if is_postgres else "SELECT * FROM files WHERE owner_id = ? ORDER BY upload_date DESC"
     cursor.execute(query_own, (user_id,))
     own_files = cursor.fetchall()
 
     # 3. Query shared files (shared WITH me)
     query_shared = """
-    SELECT files.id, files.filename, files.file_size, files.upload_date, users.username AS owner_username 
+    SELECT files.id, files.filename, files.file_size, files.upload_date, users.username AS owner_username, users.email AS owner_email 
     FROM files 
     JOIN shares ON files.id = shares.file_id 
     JOIN users ON files.owner_id = users.id 
     WHERE shares.shared_with_user_id = %s AND files.owner_id != %s
     ORDER BY files.upload_date DESC
     """ if is_postgres else """
-    SELECT files.id, files.filename, files.file_size, files.upload_date, users.username AS owner_username 
+    SELECT files.id, files.filename, files.file_size, files.upload_date, users.username AS owner_username, users.email AS owner_email 
     FROM files 
     JOIN shares ON files.id = shares.file_id 
     JOIN users ON files.owner_id = users.id 
@@ -301,6 +304,7 @@ def dashboard():
     return render_template(
         "dashboard.html",
         username=session["username"],
+        user_email=user_email,
         own_files=own_files,
         shared_files=shared_files,
         outbound_shares=outbound_shares,
