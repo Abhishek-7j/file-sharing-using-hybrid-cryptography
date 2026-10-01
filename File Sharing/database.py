@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS files (
     owner_id INTEGER NOT NULL,
     upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     file_size INTEGER NOT NULL,
+    encrypted_note TEXT,
     FOREIGN KEY(owner_id) REFERENCES users(id) ON DELETE CASCADE
 )
 """)
@@ -50,6 +51,12 @@ CREATE TABLE IF NOT EXISTS shares (
     FOREIGN KEY(shared_by_user_id) REFERENCES users(id) ON DELETE CASCADE
 )
 """)
+
+# Auto-migration for existing SQLite DB
+try:
+    cursor.execute("ALTER TABLE files ADD COLUMN encrypted_note TEXT")
+except Exception:
+    pass
 
 conn.commit()
 conn.close()

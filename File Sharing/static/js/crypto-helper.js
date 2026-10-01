@@ -236,3 +236,47 @@ function arrayBufferToHex(buffer) {
     const bytes = new Uint8Array(buffer);
     return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
 }
+
+// 14. Encrypt Text String symmetrically with raw AES Key (AES-256-GCM)
+async function encryptTextSymmetric(text, rawAesKey) {
+    if (!text || text.trim() === '') return '';
+    const textBuffer = stringToBuffer(text);
+    const aesKey = await window.crypto.subtle.importKey(
+        "raw",
+        rawAesKey,
+        { name: "AES-GCM" },
+        false,
+        ["encrypt"]
+    );
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const encrypted = await window.crypto.subtle.encrypt(
+        { name: "AES-GCM", iv: iv },
+        aesKey,
+        textBuffer
+    );
+    const result = new Uint8Array(iv.byteLength + encrypted.byteLength);
+    result.set(new Uint8Array(iv), 0);
+    result.set(new Uint8Array(encrypted), iv.byteLength);
+    return arrayBufferToBase64(result.buffer);
+}
+
+// 15. Decrypt Text String symmetrically with raw AES Key (AES-256-GCM)
+async function decryptTextSymmetric(encryptedTextB64, rawAesKey) {
+    if (!encryptedTextB64 || encryptedTextB64.trim() === '') return '';
+    const combinedBuffer = base64ToArrayBuffer(encryptedTextB64);
+    const iv = combinedBuffer.slice(0, 12);
+    const ciphertext = combinedBuffer.slice(12);
+    const aesKey = await window.crypto.subtle.importKey(
+        "raw",
+        rawAesKey,
+        { name: "AES-GCM" },
+        false,
+        ["decrypt"]
+    );
+    const decrypted = await window.crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: new Uint8Array(iv) },
+        aesKey,
+        ciphertext
+    );
+    return bufferToString(decrypted);
+}

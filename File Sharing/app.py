@@ -92,6 +92,7 @@ def check_and_create_tables(conn):
             owner_id INTEGER NOT NULL,
             upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             file_size INTEGER NOT NULL,
+            encrypted_note TEXT,
             FOREIGN KEY(owner_id) REFERENCES users(id) ON DELETE CASCADE
         )
         """)
@@ -108,6 +109,13 @@ def check_and_create_tables(conn):
             FOREIGN KEY(shared_by_user_id) REFERENCES users(id) ON DELETE CASCADE
         )
         """)
+    
+    # Auto-migration for encrypted_note column
+    try:
+        cursor.execute("ALTER TABLE files ADD COLUMN encrypted_note TEXT")
+    except Exception:
+        pass
+
     conn.commit()
     cursor.close()
 
@@ -323,6 +331,7 @@ def upload():
 
     file = request.files["file"]
     encrypted_aes_key = request.form["encrypted_aes_key"]
+    encrypted_note = request.form.get("encrypted_note", "").strip()
 
     if file.filename == "":
         return "No file selected", 400
@@ -346,8 +355,8 @@ def upload():
 
         if is_postgres:
             cursor.execute(
-                "INSERT INTO files (filename, encrypted_name, owner_id, file_size) VALUES (%s, %s, %s, %s) RETURNING id",
-                (original_filename, unique_filename, user_id, file_size)
+                "INSERT INTO files (filename, encrypted_name, owner_id, file_size, encrypted_note) VALUES (%s, %s, %s, %s, %s) RETURNING id",
+                (original_filename, unique_filename, user_id, file_size, encrypted_note)
             )
             file_id = cursor.fetchone()["id"]
             cursor.execute(
@@ -356,8 +365,8 @@ def upload():
             )
         else:
             cursor.execute(
-                "INSERT INTO files (filename, encrypted_name, owner_id, file_size) VALUES (?, ?, ?, ?)",
-                (original_filename, unique_filename, user_id, file_size)
+                "INSERT INTO files (filename, encrypted_name, owner_id, file_size, encrypted_note) VALUES (?, ?, ?, ?, ?)",
+                (original_filename, unique_filename, user_id, file_size, encrypted_note)
             )
             file_id = cursor.lastrowid
             cursor.execute(
@@ -404,9 +413,15 @@ def download_key(file_id):
     cursor = conn.cursor()
     is_postgres = not isinstance(conn, sqlite3.Connection)
     query = """
-    SELECT encrypted_aes_key FROM shares WHERE file_id = %s AND shared_with_user_id = %s
+    SELECT shares.encrypted_aes_key, files.encrypted_note 
+    FROM shares 
+    JOIN files ON shares.file_id = files.id 
+    WHERE shares.file_id = %s AND shares.shared_with_user_id = %s
     """ if is_postgres else """
-    SELECT encrypted_aes_key FROM shares WHERE file_id = ? AND shared_with_user_id = ?
+    SELECT shares.encrypted_aes_key, files.encrypted_note 
+    FROM shares 
+    JOIN files ON shares.file_id = files.id 
+    WHERE shares.file_id = ? AND shares.shared_with_user_id = ?
     """
     cursor.execute(query, (file_id, user_id))
     share = cursor.fetchone()
@@ -414,7 +429,10 @@ def download_key(file_id):
     conn.close()
 
     if share:
-        return {"encrypted_aes_key": share["encrypted_aes_key"]}
+        return {
+            "encrypted_aes_key": share["encrypted_aes_key"],
+            "encrypted_note": share["encrypted_note"] if share["encrypted_note"] else ""
+        }
     else:
         return {"status": "error", "message": "Access denied."}, 403
 
