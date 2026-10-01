@@ -13,17 +13,29 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
 
+from datetime import timedelta
+
 app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-app.secret_key = "shieldshare_secure_secret_key_12345"
+app.secret_key = os.environ.get("SECRET_KEY", "shieldshare_secure_secret_key_12345")
 
-# Configure Server-Side Sessions (Resolves 4KB Cookie Limit)
+# Configure Server-Side Sessions with Permanent 30-Day Retention
 app.config["SESSION_TYPE"] = "filesystem"
 app.config["SESSION_FILE_DIR"] = os.path.join(BASE_DIR, "flask_session")
-app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_PERMANENT"] = True
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=30)
 Session(app)
+
+@app.after_request
+def add_security_headers(response):
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "-1"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    return response
 
 # Create uploads folder if it doesn't exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -229,6 +241,7 @@ def login():
         if user and check_password_hash(user["password_hash"], password):
             # Strictly purge previous session data to ensure 100% user isolation
             session.clear()
+            session.permanent = True
             session["user_id"] = user["id"]
             session["username"] = user["username"]
             session["email"] = user["email"]

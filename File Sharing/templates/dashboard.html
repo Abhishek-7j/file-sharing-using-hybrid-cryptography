@@ -875,8 +875,17 @@
     </style>
     <script src="/static/js/crypto-helper.js"></script>
     <script>
-        if (!window.sessionStorage.getItem('private_key_pem')) {
-            window.location.href = '/logout';
+        const CURRENT_USERNAME = `{{ username }}`;
+        let activePrivateKey = window.sessionStorage.getItem('private_key_pem');
+
+        if (!activePrivateKey) {
+            // Restore persistent key for CURRENT_USERNAME if available
+            activePrivateKey = window.localStorage.getItem('shieldshare_key_' + CURRENT_USERNAME);
+            if (activePrivateKey) {
+                window.sessionStorage.setItem('private_key_pem', activePrivateKey);
+            } else {
+                window.location.href = '/logout';
+            }
         }
         const OWNER_PUBLIC_KEY_PEM = `{{ owner_public_key }}`;
     </script>
@@ -1467,6 +1476,9 @@
 
         function handleLogout() {
             window.sessionStorage.clear();
+            if (window.CURRENT_USERNAME) {
+                window.localStorage.removeItem('shieldshare_key_' + window.CURRENT_USERNAME);
+            }
             window.location.href = '/logout';
         }
 
