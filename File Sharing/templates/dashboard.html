@@ -1526,12 +1526,14 @@
             const fillBar = document.getElementById('storage-progress-fill');
             
             if (totalOwnBytes < 1024 * 1024) {
-                volumeVal.innerText = (totalOwnBytes / 1024).toFixed(2) + ' KB Used';
+                volumeVal.innerText = (totalOwnBytes / 1024).toFixed(2) + ' KB / 1 GB Used';
+            } else if (totalOwnBytes < 1024 * 1024 * 1024) {
+                volumeVal.innerText = (totalOwnBytes / (1024 * 1024)).toFixed(2) + ' MB / 1 GB Used';
             } else {
-                volumeVal.innerText = (totalOwnBytes / (1024 * 1024)).toFixed(2) + ' MB Used';
+                volumeVal.innerText = (totalOwnBytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB / 1 GB Used';
             }
 
-            const maxQuotaBytes = 100 * 1024 * 1024;
+            const maxQuotaBytes = 1024 * 1024 * 1024;
             const percentage = Math.min(100, Math.max(1, (totalOwnBytes / maxQuotaBytes) * 100));
             fillBar.style.width = percentage.toFixed(1) + '%';
         }
