@@ -262,17 +262,20 @@
         <form id="login-form">
             <div class="form-group">
                 <label for="username">Username or Email Address</label>
-                <input type="text" id="username" name="username" placeholder="Enter your registered username or email" required autocomplete="username">
+                <input type="text" id="username" name="username" placeholder="Enter registered username or email" required autocomplete="username" spellcheck="false" autocorrect="off">
             </div>
 
             <div class="form-group">
-                <label for="vault_name">🛡️ Vault Name / Security Domain</label>
-                <input type="text" id="vault_name" name="vault_name" placeholder="e.g. Personal Vault, Finance Vault" required value="Personal Secure Vault">
+                <label for="vault_name">🛡️ Vault Name / Domain Tag (Optional)</label>
+                <input type="text" id="vault_name" name="vault_name" placeholder="e.g. Primary Vault, Personal Vault" spellcheck="false" autocorrect="off">
             </div>
 
             <div class="form-group">
                 <label for="password">Master Password</label>
-                <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+                <div style="position: relative; display: flex; align-items: center;">
+                    <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+                    <button type="button" id="toggle-password-btn" onclick="togglePasswordVisibility()" style="position: absolute; right: 12px; background: transparent; border: none; color: #94A3B8; font-size: 1.1rem; cursor: pointer; padding: 4px;" title="Toggle password visibility">👁️</button>
+                </div>
             </div>
 
             <button type="submit" class="btn-submit">🔒 Unlock Vault</button>
@@ -289,6 +292,18 @@
         const loginForm = document.getElementById('login-form');
         const loader = document.getElementById('loader');
         const errorBox = document.getElementById('error-box');
+
+        function togglePasswordVisibility() {
+            const passInput = document.getElementById('password');
+            const toggleBtn = document.getElementById('toggle-password-btn');
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                toggleBtn.innerText = '🙈';
+            } else {
+                passInput.type = 'password';
+                toggleBtn.innerText = '👁️';
+            }
+        }
 
         // Auto-fill remembered login details if previously logged in
         window.addEventListener('DOMContentLoaded', () => {
@@ -311,6 +326,13 @@
             const vault_name = document.getElementById('vault_name').value.trim();
             const password = document.getElementById('password').value;
 
+            if (!username || !password) {
+                errorBox.innerText = 'Please enter both your Username/Email and Master Password.';
+                errorBox.style.display = 'block';
+                loader.style.display = 'none';
+                return;
+            }
+
             try {
                 const response = await fetch('/login', {
                     method: 'POST',
@@ -321,7 +343,7 @@
                 const data = await response.json();
 
                 if (!response.ok || data.status !== 'success') {
-                    throw new Error(data.message || 'Invalid Username/Email, Password, or Vault Name.');
+                    throw new Error(data.message || 'Invalid Username/Email or Master Password.');
                 }
 
                 const saltBuffer = base64ToArrayBuffer(data.private_key_salt);
@@ -341,7 +363,9 @@
                 window.sessionStorage.clear();
                 window.sessionStorage.setItem('private_key_pem', privatePEM);
                 window.localStorage.setItem('shieldshare_last_user', data.username);
-                window.localStorage.setItem('shieldshare_last_vault', data.vault_name || vault_name);
+                if (data.vault_name) {
+                    window.localStorage.setItem('shieldshare_last_vault', data.vault_name);
+                }
                 window.localStorage.setItem('shieldshare_key_' + data.username, privatePEM);
                 window.location.href = '/dashboard';
 
