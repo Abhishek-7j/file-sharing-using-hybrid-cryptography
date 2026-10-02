@@ -261,8 +261,13 @@
 
         <form id="login-form">
             <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email">
+                <label for="username">Username or Email Address</label>
+                <input type="text" id="username" name="username" placeholder="Enter your registered username or email" required autocomplete="username">
+            </div>
+
+            <div class="form-group">
+                <label for="vault_name">🛡️ Vault Name / Security Domain</label>
+                <input type="text" id="vault_name" name="vault_name" placeholder="e.g. Personal Vault, Finance Vault" required value="Personal Secure Vault">
             </div>
 
             <div class="form-group">
@@ -270,7 +275,7 @@
                 <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
             </div>
 
-            <button type="submit" class="btn-submit">Unlock Vault</button>
+            <button type="submit" class="btn-submit">🔒 Unlock Vault</button>
         </form>
 
         <div class="footer-link">
@@ -285,25 +290,38 @@
         const loader = document.getElementById('loader');
         const errorBox = document.getElementById('error-box');
 
+        // Auto-fill remembered login details if previously logged in
+        window.addEventListener('DOMContentLoaded', () => {
+            const lastUser = localStorage.getItem('shieldshare_last_user');
+            const lastVault = localStorage.getItem('shieldshare_last_vault');
+            if (lastUser) {
+                document.getElementById('username').value = lastUser;
+            }
+            if (lastVault) {
+                document.getElementById('vault_name').value = lastVault;
+            }
+        });
+
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             errorBox.style.display = 'none';
             loader.style.display = 'flex';
 
-            const email = document.getElementById('email').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const vault_name = document.getElementById('vault_name').value.trim();
             const password = document.getElementById('password').value;
 
             try {
                 const response = await fetch('/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ username, vault_name, password })
                 });
 
                 const data = await response.json();
 
                 if (!response.ok || data.status !== 'success') {
-                    throw new Error(data.message || 'Invalid Email or Password.');
+                    throw new Error(data.message || 'Invalid Username/Email, Password, or Vault Name.');
                 }
 
                 const saltBuffer = base64ToArrayBuffer(data.private_key_salt);
@@ -319,9 +337,11 @@
                 }
                 privatePEM += "-----END PRIVATE KEY-----";
 
-                // Strictly clear any previous browser session storage to guarantee 100% user isolation
+                // Strictly clear session storage for user isolation and remember user/vault locally
                 window.sessionStorage.clear();
                 window.sessionStorage.setItem('private_key_pem', privatePEM);
+                window.localStorage.setItem('shieldshare_last_user', data.username);
+                window.localStorage.setItem('shieldshare_last_vault', data.vault_name || vault_name);
                 window.localStorage.setItem('shieldshare_key_' + data.username, privatePEM);
                 window.location.href = '/dashboard';
 

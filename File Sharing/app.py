@@ -273,17 +273,23 @@ def login():
         if not data:
             return {"status": "error", "message": "Invalid JSON body"}, 400
 
-        email = data.get("email", "").strip()
+        login_input = (data.get("username") or data.get("email") or data.get("identifier") or "").strip()
         password = data.get("password")
+        vault_name = (data.get("vault_name") or "").strip()
+
+        if not login_input or not password:
+            return {"status": "error", "message": "Missing username/email or password."}, 400
 
         conn = get_db_connection()
         cursor = conn.cursor()
         is_postgres = not isinstance(conn, sqlite3.Connection)
-        query = "SELECT * FROM users WHERE email = %s" if is_postgres else "SELECT * FROM users WHERE email = ?"
-        cursor.execute(query, (email,))
+        query = """
+        SELECT * FROM users WHERE username = %s OR email = %s
+        """ if is_postgres else """
+        SELECT * FROM users WHERE username = ? OR email = ?
+        """
+        cursor.execute(query, (login_input, login_input))
         user = cursor.fetchone()
-        cursor.close()
-        conn.close()
 
         if user and check_password_hash(user["password_hash"], password):
             # Strictly purge previous session data to ensure 100% user isolation
@@ -292,14 +298,25 @@ def login():
             session["user_id"] = user["id"]
             session["username"] = user["username"]
             session["email"] = user["email"]
+            session["vault_name"] = vault_name or f"{user['username']}'s Vault"
+            
+            log_audit_event(conn, user["id"], "USER_LOGIN", f"User '{user['username']}' unlocked vault '{session['vault_name']}'", request.remote_addr)
+            conn.commit()
+            cursor.close()
+            conn.close()
+
             return {
                 "status": "success",
                 "username": user["username"],
+                "email": user["email"],
+                "vault_name": session["vault_name"],
                 "encrypted_private_key": user["encrypted_private_key"],
                 "private_key_salt": user["private_key_salt"]
             }
         else:
-            return {"status": "error", "message": "Invalid Email or Password."}, 401
+            cursor.close()
+            conn.close()
+            return {"status": "error", "message": "Invalid Username/Email or Master Password."}, 401
 
     return render_template("login.html")
 
