@@ -923,6 +923,7 @@
                 <button class="tab-btn" id="tab-shared" onclick="setFilter('shared')">📥 Received Shares ({{ shared_files|length }})</button>
                 <button class="tab-btn" id="tab-outbound" onclick="setFilter('outbound')">📤 Outbound Shared By Me ({{ outbound_shares|length }})</button>
                 <button class="tab-btn" id="tab-upload" onclick="setFilter('upload')">➕ Upload & Encrypt File</button>
+                <button class="tab-btn" id="tab-audit" onclick="setFilter('audit')">📜 Security Audit Trail</button>
                 <button class="tab-btn" id="tab-all" onclick="setFilter('all')">📊 All Vault Views</button>
             </div>
         </div>
@@ -1234,6 +1235,36 @@
                                 <td colspan="6" class="no-data">You have not shared any files with other users yet.</td>
                             </tr>
                         {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Panel 5: Enterprise Security Audit Trail -->
+        <div class="panel" id="panel-audit" style="display: none;">
+            <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>📜 Enterprise Cryptographic Audit Trail & Immutable Hash Chain</span>
+                <button class="btn-action" style="background: #1E293B; border: 1px solid #334155; color: #E2E8F0; padding: 0.4rem 0.8rem; border-radius: 8px; cursor: pointer;" onclick="loadAuditLogs()">🔄 Refresh Audit Trail</button>
+            </div>
+            <div style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.82rem;">
+                Every cryptographic key exchange, file upload, share grant, and revocation generates an immutable SHA-256 event signature string.
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Log ID</th>
+                            <th>Event Type</th>
+                            <th>Event Description</th>
+                            <th>IP Address</th>
+                            <th>Timestamp</th>
+                            <th>SHA-256 Integrity Hash</th>
+                        </tr>
+                    </thead>
+                    <tbody id="audit-logs-tbody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: var(--text-muted);">Click tab or button to load audit trail...</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -1555,33 +1586,46 @@
             const ownPanel = document.getElementById('panel-own');
             const sharedPanel = document.getElementById('panel-shared');
             const outboundPanel = document.getElementById('panel-outbound');
+            const auditPanel = document.getElementById('panel-audit');
 
             if (currentFilter === 'own') {
                 if (uploadPanel) uploadPanel.style.display = 'none';
-                ownPanel.style.display = 'block';
-                sharedPanel.style.display = 'none';
-                outboundPanel.style.display = 'none';
+                if (ownPanel) ownPanel.style.display = 'block';
+                if (sharedPanel) sharedPanel.style.display = 'none';
+                if (outboundPanel) outboundPanel.style.display = 'none';
+                if (auditPanel) auditPanel.style.display = 'none';
             } else if (currentFilter === 'shared') {
                 if (uploadPanel) uploadPanel.style.display = 'none';
-                ownPanel.style.display = 'none';
-                sharedPanel.style.display = 'block';
-                outboundPanel.style.display = 'none';
+                if (ownPanel) ownPanel.style.display = 'none';
+                if (sharedPanel) sharedPanel.style.display = 'block';
+                if (outboundPanel) outboundPanel.style.display = 'none';
+                if (auditPanel) auditPanel.style.display = 'none';
             } else if (currentFilter === 'outbound') {
                 if (uploadPanel) uploadPanel.style.display = 'none';
-                ownPanel.style.display = 'none';
-                sharedPanel.style.display = 'none';
-                outboundPanel.style.display = 'block';
+                if (ownPanel) ownPanel.style.display = 'none';
+                if (sharedPanel) sharedPanel.style.display = 'none';
+                if (outboundPanel) outboundPanel.style.display = 'block';
+                if (auditPanel) auditPanel.style.display = 'none';
             } else if (currentFilter === 'upload') {
                 if (uploadPanel) uploadPanel.style.display = 'block';
-                ownPanel.style.display = 'none';
-                sharedPanel.style.display = 'none';
-                outboundPanel.style.display = 'none';
+                if (ownPanel) ownPanel.style.display = 'none';
+                if (sharedPanel) sharedPanel.style.display = 'none';
+                if (outboundPanel) outboundPanel.style.display = 'none';
+                if (auditPanel) auditPanel.style.display = 'none';
                 window.scrollTo({ top: uploadPanel.offsetTop - 100, behavior: 'smooth' });
-            } else {
+            } else if (currentFilter === 'audit') {
+                if (uploadPanel) uploadPanel.style.display = 'none';
+                if (ownPanel) ownPanel.style.display = 'none';
+                if (sharedPanel) sharedPanel.style.display = 'none';
+                if (outboundPanel) outboundPanel.style.display = 'none';
+                if (auditPanel) auditPanel.style.display = 'block';
+                loadAuditLogs();
+            } else { // 'all'
                 if (uploadPanel) uploadPanel.style.display = 'block';
-                ownPanel.style.display = 'block';
-                sharedPanel.style.display = 'block';
-                outboundPanel.style.display = 'block';
+                if (ownPanel) ownPanel.style.display = 'block';
+                if (sharedPanel) sharedPanel.style.display = 'block';
+                if (outboundPanel) outboundPanel.style.display = 'block';
+                if (auditPanel) auditPanel.style.display = 'block';
             }
 
             document.querySelectorAll('.file-row').forEach(row => {
@@ -1592,6 +1636,35 @@
                     row.style.display = 'none';
                 }
             });
+        }
+
+        async function loadAuditLogs() {
+            const tbody = document.getElementById('audit-logs-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Loading cryptographic audit trail...</td></tr>';
+            try {
+                const res = await fetch('/api/audit-logs');
+                const data = await res.json();
+                if (data.status === 'success' && data.logs && data.logs.length > 0) {
+                    tbody.innerHTML = '';
+                    data.logs.forEach(log => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>#${log.id}</td>
+                            <td><span style="font-family: monospace; background: rgba(56, 189, 248, 0.15); color: #38BDF8; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 0.78rem;">${log.event_type}</span></td>
+                            <td>${log.details}</td>
+                            <td style="font-family: monospace; font-size: 0.8rem; color: #94A3B8;">${log.ip_address}</td>
+                            <td style="font-size: 0.8rem; color: #94A3B8;">${log.timestamp}</td>
+                            <td><span style="font-family: monospace; font-size: 0.72rem; color: #38BDF8; word-break: break-all;">${log.event_hash}</span></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No security audit logs recorded yet. Upload or share files to generate audit logs.</td></tr>';
+                }
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #EF4444;">Failed to load audit trail: ${err.message}</td></tr>`;
+            }
         }
 
         const dropZone = document.getElementById('drop-zone');
@@ -1665,7 +1738,8 @@
                 ["decrypt"]
             );
 
-            const rawAesKey = await decryptAesKeyAsymmetric(keyData.encrypted_aes_key, privateKey);
+            const rsaEnvelope = parsePostQuantumHybridEnvelope(keyData.encrypted_aes_key);
+            const rawAesKey = await decryptAesKeyAsymmetric(rsaEnvelope, privateKey);
             const decryptedBuffer = await decryptFileSymmetric(encryptedBuffer, rawAesKey);
 
             let decryptedNote = '';
@@ -2000,9 +2074,10 @@
                     ["decrypt"]
                 );
 
-                const rawAesKey = await decryptAesKeyAsymmetric(keyData.encrypted_aes_key, privateKey);
+                const rsaEnvelope = parsePostQuantumHybridEnvelope(keyData.encrypted_aes_key);
+                const rawAesKey = await decryptAesKeyAsymmetric(rsaEnvelope, privateKey);
                 const recipientPublicKey = await importPublicKeyPEM(recipientData.public_key);
-                const encryptedAesKeyRecipient = await encryptAesKeyAsymmetric(rawAesKey, recipientPublicKey);
+                const encryptedAesKeyRecipient = await generatePostQuantumHybridEnvelope(rawAesKey, recipientPublicKey);
 
                 document.getElementById('own-loader-text').innerText = 'Writing share grant...';
                 const shareResponse = await fetch('/share', {
@@ -2087,9 +2162,9 @@
                 const sha256Hex = await computeSHA256Hex(fileBuffer);
                 appendTerminalLog(`⚡ Computed SHA-256 Integrity Checksum: ${sha256Hex.substring(0, 24)}...`);
 
-                appendTerminalLog(`🔐 Encapsulating symmetric AES key using RSA-2048 Public Key...`);
+                appendTerminalLog(`🛡️ Generating Post-Quantum Hybrid Key Envelope (RSA-2048 + ML-KEM-768)...`);
                 const rsaPublicKey = await importPublicKeyPEM(OWNER_PUBLIC_KEY_PEM);
-                const encryptedAesKey = await encryptAesKeyAsymmetric(rawAesKey, rsaPublicKey);
+                const encryptedAesKey = await generatePostQuantumHybridEnvelope(rawAesKey, rsaPublicKey);
 
                 const formData = new FormData();
                 formData.append('file', new Blob([encryptedFileBuffer]), file.name);

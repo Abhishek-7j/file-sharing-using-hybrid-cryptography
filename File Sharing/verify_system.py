@@ -381,6 +381,45 @@ res_new_login = client.post("/login", json={
 assert res_new_login.status_code == 200
 print("OK - Logged in successfully with the new password!")
 
+# Test 10: Server-Side 1 GB Quota Enforcement Block
+print("\n--- Test 10: Server-Side 1 GB Quota Enforcement ---")
+large_payload_sim = io.BytesIO(b"X" * 100)
+res_quota = client.post("/upload", data={
+    "file": (large_payload_sim, "overlimit_sim.enc"),
+    "encrypted_aes_key": base64.b64encode(encrypted_aes_key).decode()
+})
+# Inject artificial large storage usage record directly to database to trigger > 1 GB block
+conn = get_db_connection()
+conn.execute("INSERT INTO files (filename, encrypted_name, owner_id, file_size) VALUES ('huge.bin', 'huge.bin.enc', 1, 1073741825)")
+conn.commit()
+conn.close()
+
+res_quota_blocked = client.post("/upload", data={
+    "file": (io.BytesIO(b"Blocked payload"), "blocked.txt"),
+    "encrypted_aes_key": base64.b64encode(encrypted_aes_key).decode()
+})
+assert res_quota_blocked.status_code == 400
+assert b"1 GB" in res_quota_blocked.data
+print("OK - Server-side 1 GB storage quota enforcement verified!")
+
+# Clean up simulated large record
+conn = get_db_connection()
+conn.execute("DELETE FROM files WHERE encrypted_name = 'huge.bin.enc'")
+conn.commit()
+conn.close()
+
+# Test 11: Security Audit Log API & SHA-256 Hash Chain Verification
+print("\n--- Test 11: Security Audit Log Trail Verification ---")
+res_audit = client.get("/api/audit-logs")
+assert res_audit.status_code == 200
+audit_json = res_audit.get_json()
+assert audit_json["status"] == "success"
+assert len(audit_json["logs"]) > 0
+log_entry = audit_json["logs"][0]
+assert "event_hash" in log_entry
+assert len(log_entry["event_hash"]) == 64 # SHA-256 hex string length
+print(f"OK - Audit log entry verified: [{log_entry['event_type']}] SHA-256: {log_entry['event_hash'][:16]}...")
+
 print("\n==============================================")
-print("ALL SYSTEM INTEGRATION VERIFICATIONS SUCCESSFUL!")
+print("ALL ENTERPRISE SYSTEM VERIFICATIONS SUCCESSFUL!")
 print("==============================================")

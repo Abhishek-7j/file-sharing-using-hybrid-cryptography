@@ -21,6 +21,8 @@ UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.secret_key = os.environ.get("SECRET_KEY", "shieldshare_secure_secret_key_12345")
 
+import hashlib
+
 # Configure Server-Side Sessions with Permanent 30-Day Retention
 app.config["SESSION_TYPE"] = "filesystem"
 app.config["SESSION_FILE_DIR"] = os.path.join(BASE_DIR, "flask_session")
@@ -41,6 +43,26 @@ def add_security_headers(response):
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 TABLES_INITIALIZED = False
+
+def log_audit_event(conn, user_id, event_type, details, ip_address):
+    try:
+        cursor = conn.cursor()
+        is_postgres = not isinstance(conn, sqlite3.Connection)
+        raw_sig = f"{user_id}:{event_type}:{details}:{ip_address}"
+        event_hash = hashlib.sha256(raw_sig.encode("utf-8")).hexdigest()
+        if is_postgres:
+            cursor.execute(
+                "INSERT INTO audit_logs (user_id, event_type, details, ip_address, event_hash) VALUES (%s, %s, %s, %s, %s)",
+                (user_id, event_type, details, ip_address or "127.0.0.1", event_hash)
+            )
+        else:
+            cursor.execute(
+                "INSERT INTO audit_logs (user_id, event_type, details, ip_address, event_hash) VALUES (?, ?, ?, ?, ?)",
+                (user_id, event_type, details, ip_address or "127.0.0.1", event_hash)
+            )
+        cursor.close()
+    except Exception as e:
+        print(f"[AUDIT LOG ERROR] Failed to write log: {e}")
 
 def check_and_create_tables(conn):
     cursor = conn.cursor()
@@ -81,6 +103,18 @@ def check_and_create_tables(conn):
             encrypted_aes_key TEXT NOT NULL
         )
         """)
+        # Create Audit Logs
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS audit_logs (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            event_type VARCHAR(100) NOT NULL,
+            details TEXT NOT NULL,
+            ip_address VARCHAR(100) NOT NULL,
+            event_hash VARCHAR(64) NOT NULL,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
     else:
         # Create Users (SQLite)
         cursor.execute("""
@@ -119,6 +153,19 @@ def check_and_create_tables(conn):
             FOREIGN KEY(file_id) REFERENCES files(id) ON DELETE CASCADE,
             FOREIGN KEY(shared_with_user_id) REFERENCES users(id) ON DELETE CASCADE,
             FOREIGN KEY(shared_by_user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+        """)
+        # Create Audit Logs (SQLite)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS audit_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            event_type TEXT NOT NULL,
+            details TEXT NOT NULL,
+            ip_address TEXT NOT NULL,
+            event_hash TEXT NOT NULL,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
         )
         """)
     
@@ -353,19 +400,31 @@ def upload():
         encrypted_data = file.read()
         file_size = len(encrypted_data)
         original_filename = secure_filename(file.filename)
+        user_id = session["user_id"]
 
-        # 1. Save encrypted file directly to disk
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        is_postgres = not isinstance(conn, sqlite3.Connection)
+
+        # 1. Enforce Server-Side 1 GB Storage Quota (1,073,741,824 bytes)
+        query_quota = "SELECT COALESCE(SUM(file_size), 0) AS total_used FROM files WHERE owner_id = %s" if is_postgres else "SELECT COALESCE(SUM(file_size), 0) AS total_used FROM files WHERE owner_id = ?"
+        cursor.execute(query_quota, (user_id,))
+        row_quota = cursor.fetchone()
+        total_used = row_quota["total_used"] if row_quota else 0
+        max_quota = 1024 * 1024 * 1024  # 1 GB
+
+        if total_used + file_size > max_quota:
+            cursor.close()
+            conn.close()
+            return "Storage quota of 1 GB exceeded for this user account.", 400
+
+        # 2. Save encrypted file directly to disk
         unique_filename = f"{uuid.uuid4().hex}.enc"
         encrypted_path = os.path.join(app.config["UPLOAD_FOLDER"], unique_filename)
         with open(encrypted_path, "wb") as f:
             f.write(encrypted_data)
 
-        # 2. Write file and default share record
-        user_id = session["user_id"]
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        is_postgres = not isinstance(conn, sqlite3.Connection)
-
+        # 3. Write file and default share record
         if is_postgres:
             cursor.execute(
                 "INSERT INTO files (filename, encrypted_name, owner_id, file_size, encrypted_note) VALUES (%s, %s, %s, %s, %s) RETURNING id",
@@ -387,6 +446,9 @@ def upload():
                 (file_id, user_id, user_id, encrypted_aes_key)
             )
         
+        # 4. Log Immutable Security Audit Event
+        log_audit_event(conn, user_id, "FILE_UPLOAD", f"Uploaded encrypted vault file '{original_filename}' ({file_size} bytes)", request.remote_addr)
+
         conn.commit()
         cursor.close()
         conn.close()
@@ -552,6 +614,8 @@ def share():
             """
             cursor.execute(query_insert, (file_id, recipient["id"], user_id, encrypted_aes_key))
         
+        log_audit_event(conn, user_id, "KEY_SHARE", f"Shared vault key for file #{file_id} with recipient '{share_with}'", request.remote_addr)
+
         conn.commit()
         cursor.close()
         conn.close()
@@ -641,11 +705,50 @@ def revoke_share():
     DELETE FROM shares WHERE file_id = ? AND shared_with_user_id = ? AND shared_by_user_id = ?
     """
     cursor.execute(query_delete, (file_id, target_user["id"], user_id))
+    log_audit_event(conn, user_id, "ACCESS_REVOKED", f"Revoked vault access for file #{file_id} from user '{target_username}'", request.remote_addr)
     conn.commit()
     cursor.close()
     conn.close()
 
     return {"status": "success", "message": f"Access for {target_username} revoked successfully"}
+
+@app.route("/api/audit-logs")
+def get_audit_logs():
+    if "username" not in session:
+        return {"status": "error", "message": "Unauthorized"}, 401
+    
+    user_id = session["user_id"]
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    is_postgres = not isinstance(conn, sqlite3.Connection)
+    
+    query = """
+    SELECT id, event_type, details, ip_address, event_hash, timestamp 
+    FROM audit_logs 
+    WHERE user_id = %s 
+    ORDER BY id DESC LIMIT 50
+    """ if is_postgres else """
+    SELECT id, event_type, details, ip_address, event_hash, timestamp 
+    FROM audit_logs 
+    WHERE user_id = ? 
+    ORDER BY id DESC LIMIT 50
+    """
+    cursor.execute(query, (user_id,))
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    
+    logs = []
+    for r in rows:
+        logs.append({
+            "id": r["id"],
+            "event_type": r["event_type"],
+            "details": r["details"],
+            "ip_address": r["ip_address"],
+            "event_hash": r["event_hash"],
+            "timestamp": str(r["timestamp"])
+        })
+    return {"status": "success", "logs": logs}
 
 @app.route("/get-recovery-challenge")
 def get_recovery_challenge():
